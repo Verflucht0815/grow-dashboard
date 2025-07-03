@@ -23,6 +23,7 @@
             <button class="nav-btn" data-module="temp">Temperatur</button>
             <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
             <button class="nav-btn" data-module="vpd">VPD</button>
+            <button class="nav-btn" data-module="soil">Bodenfeuchtigkeit</button>
         </div>
 
         <!-- Temperatur Modul -->
@@ -40,16 +41,6 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="tempChart"></canvas>
-                </div>
-                <div class="info-dropdown">
-                    <button class="info-btn">ℹ️ Optimale Temperaturwerte</button>
-                    <div class="info-content">
-                        <ul>
-                            <li><strong>Keimling:</strong> 20-25°C</li>
-                            <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
-                            <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -69,16 +60,6 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="humidityChart"></canvas>
-                </div>
-                <div class="info-dropdown">
-                    <button class="info-btn">ℹ️ Optimale Luftfeuchtigkeit</button>
-                    <div class="info-content">
-                        <ul>
-                            <li><strong>Keimling:</strong> 65-70%</li>
-                            <li><strong>Wachstum:</strong> 40-70%</li>
-                            <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -100,35 +81,24 @@
                     <canvas id="vpdChart"></canvas>
                 </div>
                 <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
-                <div class="info-dropdown">
-                    <button class="info-btn">ℹ️ VPD-Informationen</button>
-                    <div class="info-content">
-                        <p><strong>Optimalbereiche:</strong></p>
-                        <ul>
-                            <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
-                            <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
-                            <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
-                        </ul>
-                        <h4>VPD-Referenztabelle</h4>
-                        <table class="vpd-table">
-                            <thead>
-                                <tr>
-                                    <th>Temp (°C)</th>
-                                    <th>40% RH</th>
-                                    <th>50% RH</th>
-                                    <th>60% RH</th>
-                                    <th>70% RH</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>20</td><td>0.93</td><td>0.70</td><td>0.47</td><td>0.23</td></tr>
-                                <tr><td>22</td><td>1.05</td><td>0.81</td><td>0.57</td><td>0.33</td></tr>
-                                <tr><td>24</td><td>1.19</td><td>0.93</td><td>0.68</td><td>0.42</td></tr>
-                                <tr><td>26</td><td>1.34</td><td>1.07</td><td>0.80</td><td>0.53</td></tr>
-                                <tr><td>28</td><td>1.51</td><td>1.23</td><td>0.94</td><td>0.65</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+            </div>
+        </div>
+
+        <!-- Bodenfeuchtigkeit Modul -->
+        <div id="soil-module" class="sub-module">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>Bodenfeuchtigkeit (%)</h2>
+                    <select class="time-select" data-chart="soilChart">
+                        <option value="1">1 Stunde</option>
+                        <option value="6">6 Stunden</option>
+                        <option value="24" selected>24 Stunden</option>
+                        <option value="168">7 Tage</option>
+                        <option value="720">30 Tage</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="soilChart"></canvas>
                 </div>
             </div>
         </div>
@@ -138,33 +108,35 @@
     <div id="control" class="module">
         <div class="card">
             <h2>Steuerung</h2>
-            <div class="control-row">
-                <label for="lightSwitch">💡 Licht An/Aus</label>
-                <label class="switch">
-                    <input type="checkbox" id="lightSwitch" />
-                    <span class="slider round"></span>
-                </label>
-            </div>
 
-            <div class="control-row">
-                <label for="lightDimmer">Dimmer (%)</label>
-                <input type="range" id="lightDimmer" min="0" max="100" value="50" />
-                <span id="dimmerValue">50%</span>
-            </div>
+            <ul class="control-list">
+                <li>
+                    <label for="lightSwitch">💡 Licht An/Aus</label>
+                    <label class="switch">
+                        <input type="checkbox" id="lightSwitch" />
+                        <span class="slider round"></span>
+                    </label>
+                </li>
 
-            <div class="control-row watt-display">
-                <div>
+                <li>
+                    <label for="lightDimmer">Dimmer (%)</label>
+                    <input type="range" id="lightDimmer" min="0" max="100" value="50" />
+                    <span id="dimmerValue">50%</span>
+                </li>
+
+                <li>
                     <strong>Verbrauchte Watt:</strong>
-                </div>
-                <div id="wattGauge" class="gauge">0 W</div>
-            </div>
+                    <div id="wattGauge" class="gauge">0 W</div>
+                </li>
 
-            <div class="control-row">
-                <button class="main-btn">💧 Wasserpumpe An/Aus</button>
-            </div>
-            <div class="control-row">
-                <button class="main-btn">🌫️ Luftbefeuchter An/Aus</button>
-            </div>
+                <li>
+                    <button class="main-btn" id="waterPumpBtn">💧 Wasserpumpe An/Aus</button>
+                </li>
+
+                <li>
+                    <button class="main-btn" id="humidifierBtn">🌫️ Luftbefeuchter An/Aus</button>
+                </li>
+            </ul>
         </div>
     </div>
 
@@ -174,12 +146,6 @@
             <h2>Anleitung</h2>
             <div class="guide-nav"></div>
             <div id="guideContent" class="guide-section card"></div>
-            <button id="editGuideBtn" class="main-btn">✏️ Anleitung bearbeiten</button>
-            <div id="editArea" style="display:none; margin-top:12px;">
-                <textarea id="guideEditor" rows="10" style="width:100%; font-family: monospace;"></textarea>
-                <button id="saveGuideBtn" class="main-btn" style="margin-top:8px;">Speichern</button>
-                <button id="cancelEditBtn" class="main-btn" style="margin-top:8px; background-color:#aaa;">Abbrechen</button>
-            </div>
         </div>
     </div>
 
