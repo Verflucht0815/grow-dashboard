@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const CHANNEL_ID = 2999714;
     const READ_API_KEY = '95YOHGB903ET32DX';
+
     let tempChart, humidityChart, vpdChart;
 
+    // VPD Berechnung (kPa)
     function calculateVPD(temp, humidity) {
         if (!temp || !humidity) return null;
         const svp = 0.61078 * Math.exp((17.27 * temp) / (temp + 237.3));
@@ -10,39 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return (svp - vp).toFixed(2);
     }
 
+    // Farben je nach Modus
     const getChartColors = () => {
         return {
             textColor: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
-            gridColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? 
-                      'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-            tempColor: '#FF6384',
-            humidityColor: '#36A2EB',
-            vpdColor: '#9C27B0'
+            gridColor: window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            tempColor: '#2f6b3e',
+            humidityColor: '#3e8c4d',
+            vpdColor: '#4caf50'
         };
     };
-
-    function initCharts() {
-        const colors = getChartColors();
-        tempChart = new Chart(
-            document.getElementById('tempChart').getContext('2d'),
-            getChartConfig('Temperatur', '°C', colors.tempColor, colors)
-        );
-        humidityChart = new Chart(
-            document.getElementById('humidityChart').getContext('2d'),
-            getChartConfig('Luftfeuchtigkeit', '%', colors.humidityColor, colors)
-        );
-        vpdChart = new Chart(
-            document.getElementById('vpdChart').getContext('2d'),
-            getChartConfig('VPD', 'kPa', colors.vpdColor, colors)
-        );
-    }
 
     function getChartConfig(label, unit, color, colors) {
         return {
             type: 'line',
             data: {
                 datasets: [{
-                    label: label,
+                    label,
                     borderColor: color,
                     backgroundColor: color + '20',
                     borderWidth: 2,
@@ -59,130 +46,189 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'time',
                         time: {
                             tooltipFormat: 'DD.MM HH:mm',
-                            unit: 'minute',
-                            displayFormats: {
-                                minute: 'HH:mm',
-                                hour: 'HH:mm'
-                            }
+                            unit: 'hour',
+                            stepSize: 1 // Weniger Markierungen für 1h Ansicht
                         },
-                        ticks: {
-                            maxTicksLimit: 6,
-                            color: colors.textColor
-                        },
-                        grid: { color: colors.gridColor }
+                        grid: { color: colors.gridColor },
+                        ticks: { color: colors.textColor }
                     },
                     y: {
-                        title: {
-                            display: true,
-                            text: unit,
-                            color: colors.textColor
-                        },
-                        ticks: { color: colors.textColor },
-                        grid: { color: colors.gridColor }
+                        title: { display: true, text: unit, color: colors.textColor },
+                        grid: { color: colors.gridColor },
+                        ticks: { color: colors.textColor }
                     }
                 },
                 plugins: {
-                    legend: { display: false },
-                    tooltip: { mode: 'index', intersect: false }
+                    legend: {
+                        labels: { color: colors.textColor }
+                    },
+                    tooltip: {
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => `${ctx.parsed.y} ${unit}`
+                        }
+                    }
                 }
             }
         };
     }
 
-    async function loadData(chart, hours) {
-        try {
-            const response = await fetch(
-                `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours * 6}`
-            );
-            const data = await response.json();
-            const feeds = data.feeds.map(f => ({
-                x: f.created_at,
-                temp: parseFloat(f.field1),
-                humidity: parseFloat(f.field2),
-                vpd: calculateVPD(parseFloat(f.field1), parseFloat(f.field2))
-            })).filter(f => !isNaN(f.temp) && !isNaN(f.humidity));
+    // Charts initialisieren
+    const ctxTemp = document.getElementById('tempChart').getContext('2d');
+    const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+    const ctxVpd = document.getElementById('vpdChart').getContext('2d');
 
-            if (chart === tempChart) {
-                chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.temp }));
-            } else if (chart === humidityChart) {
-                chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.humidity }));
-            } else if (chart === vpdChart) {
-                chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.vpd }));
-                if (feeds.length > 0) {
-                    const lastVpd = feeds[feeds.length - 1].vpd;
-                    const vpdElement = document.getElementById('currentVpd');
-                    vpdElement.textContent = `Aktueller VPD: ${lastVpd} kPa`;
-                    if (lastVpd < 0.8) {
-                        vpdElement.style.background = 'var(--vpd-low)';
-                    } else if (lastVpd > 1.2) {
-                        vpdElement.style.background = 'var(--vpd-high)';
-                    } else {
-                        vpdElement.style.background = 'var(--vpd-optimal)';
-                    }
-                }
-            }
-            chart.update();
-        } catch (error) {
-            console.error("Fehler beim Laden der Daten:", error);
+    const colors = getChartColors();
+
+    tempChart = new Chart(ctxTemp, getChartConfig('Temperatur', '°C', colors.tempColor, colors));
+    humidityChart = new Chart(ctxHumidity, getChartConfig('Luftfeuchtigkeit', '%', colors.humidityColor, colors));
+    vpdChart = new Chart(ctxVpd, getChartConfig('VPD', 'kPa', colors.vpdColor, colors));
+
+    // Aktuelles VPD anzeigen
+    const currentVpdElem = document.getElementById('currentVpd');
+
+    // Daten von ThingSpeak laden
+    async function fetchData(hours) {
+        // Hole UNIX Zeit (jetzt) minus Stunden in Sekunden
+        const endTime = Math.floor(Date.now() / 1000);
+        const startTime = endTime - hours * 3600;
+
+        // ThingSpeak JSON Feed URL mit Zeitfilter (timesince)
+        const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${new Date(startTime * 1000).toISOString()}&end=${new Date(endTime * 1000).toISOString()}&results=1000`;
+
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Netzwerkantwort war nicht ok');
+            const json = await res.json();
+            return json.feeds;
+        } catch (e) {
+            console.error('Fehler beim Laden der Daten:', e);
+            return [];
         }
     }
 
-    document.querySelectorAll('.main-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-            document.getElementById(this.dataset.main).classList.add('active');
-        });
-    });
+    // Daten aufbereiten
+    function processData(feeds) {
+        const tempData = [];
+        const humidityData = [];
+        const vpdData = [];
 
-    document.querySelectorAll('.guide-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.guide-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(this.dataset.guide).classList.add('active');
-        });
-    });
+        feeds.forEach(f => {
+            if (f.created_at) {
+                const time = new Date(f.created_at);
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.sub-module').forEach(m => m.classList.remove('active'));
-            const moduleId = this.dataset.module;
-            document.getElementById(`${moduleId}-module`).classList.add('active');
-            loadData(
-                moduleId === 'temp' ? tempChart : moduleId === 'humidity' ? humidityChart : vpdChart,
-                parseInt(document.querySelector(`#${moduleId}-module .time-select`).value)
-            );
-        });
-    });
+                const temp = parseFloat(f.field1);
+                const humidity = parseFloat(f.field2);
+                const vpd = calculateVPD(temp, humidity);
 
-    document.querySelectorAll('.time-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const hours = parseInt(this.value);
-            const chartId = this.closest('.card').querySelector('canvas').id;
-            switch (chartId) {
-                case 'tempChart':
-                    loadData(tempChart, hours);
-                    break;
-                case 'humidityChart':
-                    loadData(humidityChart, hours);
-                    break;
-                case 'vpdChart':
-                    loadData(vpdChart, hours);
-                    break;
+                if (!isNaN(temp)) tempData.push({ x: time, y: temp });
+                if (!isNaN(humidity)) humidityData.push({ x: time, y: humidity });
+                if (vpd !== null) vpdData.push({ x: time, y: parseFloat(vpd) });
+            }
+        });
+
+        return { tempData, humidityData, vpdData };
+    }
+
+    // Charts aktualisieren
+    function updateCharts(data) {
+        tempChart.data.datasets[0].data = data.tempData;
+        humidityChart.data.datasets[0].data = data.humidityData;
+        vpdChart.data.datasets[0].data = data.vpdData;
+
+        tempChart.update();
+        humidityChart.update();
+        vpdChart.update();
+
+        // Aktueller VPD Wert (letzter Wert)
+        if (data.vpdData.length > 0) {
+            const lastVpd = data.vpdData[data.vpdData.length - 1].y;
+            currentVpdElem.textContent = `Aktueller VPD: ${lastVpd.toFixed(2)} kPa`;
+        }
+    }
+
+    // Modul- und Untermodul-Steuerung
+    const mainBtns = document.querySelectorAll('.main-btn');
+    const modules = document.querySelectorAll('.module');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const subModules = document.querySelectorAll('.sub-module');
+    const guideBtns = document.querySelectorAll('.guide-btn');
+    const guideSections = document.querySelectorAll('.guide-section');
+
+    function activateModule(id) {
+        modules.forEach(m => m.classList.remove('active'));
+        const module = document.getElementById(id);
+        if (module) module.classList.add('active');
+    }
+
+    function activateSubModule(id) {
+        subModules.forEach(s => s.classList.remove('active'));
+        const subModule = document.getElementById(id);
+        if (subModule) subModule.classList.add('active');
+    }
+
+    function activateGuide(id) {
+        guideSections.forEach(s => s.classList.remove('active'));
+        const section = document.getElementById(id);
+        if (section) section.classList.add('active');
+    }
+
+    mainBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            activateModule(btn.dataset.main);
+
+            // Wenn Klima, dann Temp Modul als Standard aktivieren
+            if (btn.dataset.main === 'climate') {
+                activateSubModule('temp-module');
             }
         });
     });
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        const colors = getChartColors();
-        [tempChart, humidityChart, vpdChart].forEach(chart => {
-            chart.options.scales.x.ticks.color = colors.textColor;
-            chart.options.scales.y.ticks.color = colors.textColor;
-            chart.options.scales.y.title.color = colors.textColor;
-            chart.options.scales.x.grid.color = colors.gridColor;
-            chart.options.scales.y.grid.color = colors.gridColor;
-            chart.update();
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modId = btn.dataset.module + '-module';
+            activateSubModule(modId);
         });
     });
 
-    initCharts();
-    document.querySelector('.nav-btn[data-module="temp"]').click();
+    guideBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            activateGuide(btn.dataset.guide);
+        });
+    });
+
+    // Info Dropdown auf/zu
+    document.querySelectorAll('.info-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            const content = btn.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Zeit-Select bei jedem Chart
+    document.querySelectorAll('.time-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const hours = parseInt(e.target.value);
+            const data = await fetchData(hours);
+            const processed = processData(data);
+            updateCharts(processed);
+        });
+    });
+
+    // Starte mit Klima und Temperatur aktiv
+    activateModule('climate');
+    activateSubModule('temp-module');
+
+    // Initiale Daten laden für 24 Stunden
+    (async () => {
+        const data = await fetchData(24);
+        const processed = processData(data);
+        updateCharts(processed);
+    })();
 });
