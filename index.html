@@ -1,74 +1,139 @@
 
- document.addEventListener('DOMContentLoaded', () => {
-        // CONFIG HIER ANPASSEN!
-        const CHANNEL_ID = 2999714;      // Deine ThingSpeak Channel ID
-        const READ_API_KEY = '95YOHGB903ET32DX'; // Dein Read API Key
-    let chart;
+   <!DOCTYPE html>
+<html>
+<head>
+    <title>GrowController</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .time-btn { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #myChart {
+            width: 100%;
+            min-height: 400px;
+        }
+        #debug {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌱 GrowController</h1>
+    <div>
+        <button class="time-btn">1h</button>
+        <button class="time-btn">24h</button>
+        <button class="time-btn">7d</button>
+    </div>
+    <canvas id="myChart"></canvas>
+    <div id="debug"></div>
 
-    function initChart() {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: { 
-                datasets: [
-                    { 
-                        label: "Temperatur (°C)", 
-                        borderColor: '#FF6384',
-                        data: [] 
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const CHANNEL_ID = 2999714;
+        const READ_API_KEY = '95YOHGB903ET32DX';
+        let chart;
+        const debugEl = document.getElementById('debug');
+
+        function logDebug(msg) {
+            debugEl.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        function initChart() {
+            try {
+                const ctx = document.getElementById('myChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: { 
+                        datasets: [
+                            { 
+                                label: "Temperatur (°C)", 
+                                borderColor: '#FF6384',
+                                data: [] 
+                            },
+                            { 
+                                label: "Luftfeuchtigkeit (%)", 
+                                borderColor: '#36A2EB',
+                                data: [] 
+                            }
+                        ]
                     },
-                    { 
-                        label: "Luftfeuchtigkeit (%)", 
-                        borderColor: '#36A2EB',
-                        data: [] 
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { 
-                        type: 'time',
-                        time: {
-                            tooltipFormat: 'DD.MM HH:mm',
-                            unit: 'hour'
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { 
+                                type: 'time',
+                                time: {
+                                    tooltipFormat: 'DD.MM HH:mm',
+                                    unit: 'hour'
+                                }
+                            }
                         }
                     }
-                }
+                });
+                logDebug('Chart initialisiert');
+            } catch (e) {
+                logDebug('Chart Fehler: ' + e.message);
             }
-        });
-    }
-
-    async function loadData(hours) {
-        try {
-            const response = await fetch(
-                `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours*6}`
-            );
-            const data = await response.json();
-            
-            chart.data.datasets[0].data = data.feeds.map(f => ({
-                x: f.created_at,
-                y: parseFloat(f.field1)
-            }));
-            chart.data.datasets[1].data = data.feeds.map(f => ({
-                x: f.created_at,
-                y: parseFloat(f.field2)
-            }));
-            
-            chart.update();
-        } catch (error) {
-            console.error("Fehler:", error);
         }
-    }
 
-    // Event-Listener für Buttons
-    document.querySelectorAll('.time-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const hours = parseInt(btn.textContent);
-            loadData(hours);
+        async function loadData(hours) {
+            try {
+                logDebug(`Lade Daten für ${hours} Stunden...`);
+                const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours*6}`;
+                logDebug('API-URL: ' + url);
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                logDebug(`Daten empfangen: ${data.feeds.length} Einträge`);
+                
+                if (!data.feeds || data.feeds.length === 0) {
+                    throw new Error('Keine Daten im Response');
+                }
+
+                chart.data.datasets[0].data = data.feeds.map(f => ({
+                    x: f.created_at,
+                    y: parseFloat(f.field1)
+                }));
+                chart.data.datasets[1].data = data.feeds.map(f => ({
+                    x: f.created_at,
+                    y: parseFloat(f.field2)
+                }));
+                
+                chart.update();
+                logDebug('Chart aktualisiert');
+            } catch (error) {
+                logDebug('FEHLER: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // Event-Listener für Buttons
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const hours = parseInt(btn.textContent.replace('d', '')) * (btn.textContent.includes('d') ? 24 : 1);
+                loadData(hours);
+            });
         });
-    });
 
-    // Initialisierung
-    initChart();
-    loadData(24); // Start mit 24h-Daten
+        // Initialisierung
+        initChart();
+        loadData(24);
+    });
+    </script>
+</body>
+</html>
 });
