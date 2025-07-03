@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return (svp - vp).toFixed(2);
     }
 
+    // Dynamische Einheit für x-Achse abhängig von Stunden
+    function getTimeUnit(hours) {
+        if (hours <= 1) return 'minute';
+        if (hours <= 6) return 'hour';
+        if (hours <= 168) return 'day';
+        return 'week';
+    }
+
     // Farben je nach Modus
     const getChartColors = () => {
         return {
@@ -24,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    function getChartConfig(label, unit, color, colors) {
+    function getChartConfig(label, unit, color, colors, timeUnit) {
         return {
             type: 'line',
             data: {
@@ -46,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'time',
                         time: {
                             tooltipFormat: 'DD.MM HH:mm',
-                            unit: 'hour',
-                            stepSize: 1 // Weniger Markierungen für 1h Ansicht
+                            unit: timeUnit,
+                            stepSize: 1
                         },
                         grid: { color: colors.gridColor },
                         ticks: { color: colors.textColor }
@@ -81,20 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const colors = getChartColors();
 
-    tempChart = new Chart(ctxTemp, getChartConfig('Temperatur', '°C', colors.tempColor, colors));
-    humidityChart = new Chart(ctxHumidity, getChartConfig('Luftfeuchtigkeit', '%', colors.humidityColor, colors));
-    vpdChart = new Chart(ctxVpd, getChartConfig('VPD', 'kPa', colors.vpdColor, colors));
+    tempChart = new Chart(ctxTemp, getChartConfig('Temperatur', '°C', colors.tempColor, colors, 'hour'));
+    humidityChart = new Chart(ctxHumidity, getChartConfig('Luftfeuchtigkeit', '%', colors.humidityColor, colors, 'hour'));
+    vpdChart = new Chart(ctxVpd, getChartConfig('VPD', 'kPa', colors.vpdColor, colors, 'hour'));
 
-    // Aktuelles VPD anzeigen
     const currentVpdElem = document.getElementById('currentVpd');
 
     // Daten von ThingSpeak laden
     async function fetchData(hours) {
-        // Hole UNIX Zeit (jetzt) minus Stunden in Sekunden
         const endTime = Math.floor(Date.now() / 1000);
         const startTime = endTime - hours * 3600;
 
-        // ThingSpeak JSON Feed URL mit Zeitfilter (timesince)
         const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&start=${new Date(startTime * 1000).toISOString()}&end=${new Date(endTime * 1000).toISOString()}&results=1000`;
 
         try {
@@ -108,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Daten aufbereiten
     function processData(feeds) {
         const tempData = [];
         const humidityData = [];
@@ -131,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { tempData, humidityData, vpdData };
     }
 
-    // Charts aktualisieren
     function updateCharts(data) {
         tempChart.data.datasets[0].data = data.tempData;
         humidityChart.data.datasets[0].data = data.humidityData;
@@ -141,94 +144,16 @@ document.addEventListener('DOMContentLoaded', () => {
         humidityChart.update();
         vpdChart.update();
 
-        // Aktueller VPD Wert (letzter Wert)
         if (data.vpdData.length > 0) {
             const lastVpd = data.vpdData[data.vpdData.length - 1].y;
             currentVpdElem.textContent = `Aktueller VPD: ${lastVpd.toFixed(2)} kPa`;
         }
     }
 
-    // Modul- und Untermodul-Steuerung
-    const mainBtns = document.querySelectorAll('.main-btn');
+    // Module / Submodule / Guide Steuerung
+    const mainBtns = document.querySelectorAll('.main-btn[data-main]');
     const modules = document.querySelectorAll('.module');
     const navBtns = document.querySelectorAll('.nav-btn');
     const subModules = document.querySelectorAll('.sub-module');
-    const guideBtns = document.querySelectorAll('.guide-btn');
-    const guideSections = document.querySelectorAll('.guide-section');
-
-    function activateModule(id) {
-        modules.forEach(m => m.classList.remove('active'));
-        const module = document.getElementById(id);
-        if (module) module.classList.add('active');
-    }
-
-    function activateSubModule(id) {
-        subModules.forEach(s => s.classList.remove('active'));
-        const subModule = document.getElementById(id);
-        if (subModule) subModule.classList.add('active');
-    }
-
-    function activateGuide(id) {
-        guideSections.forEach(s => s.classList.remove('active'));
-        const section = document.getElementById(id);
-        if (section) section.classList.add('active');
-    }
-
-    mainBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            activateModule(btn.dataset.main);
-
-            // Wenn Klima, dann Temp Modul als Standard aktivieren
-            if (btn.dataset.main === 'climate') {
-                activateSubModule('temp-module');
-            }
-        });
-    });
-
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modId = btn.dataset.module + '-module';
-            activateSubModule(modId);
-        });
-    });
-
-    guideBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            activateGuide(btn.dataset.guide);
-        });
-    });
-
-    // Info Dropdown auf/zu
-    document.querySelectorAll('.info-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.classList.toggle('active');
-            const content = btn.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                content.style.display = 'block';
-            }
-        });
-    });
-
-    // Zeit-Select bei jedem Chart
-    document.querySelectorAll('.time-select').forEach(select => {
-        select.addEventListener('change', async (e) => {
-            const hours = parseInt(e.target.value);
-            const data = await fetchData(hours);
-            const processed = processData(data);
-            updateCharts(processed);
-        });
-    });
-
-    // Starte mit Klima und Temperatur aktiv
-    activateModule('climate');
-    activateSubModule('temp-module');
-
-    // Initiale Daten laden für 24 Stunden
-    (async () => {
-        const data = await fetchData(24);
-        const processed = processData(data);
-        updateCharts(processed);
-    })();
-});
+    const guideContentDiv = document.getElementById('guideContent');
+   
