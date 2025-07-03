@@ -5,8 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>🌱 GrowController Pro</title>
 
+<!-- Chart.js & Moment.js für Zeitachsen -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+
 <style>
-  /* Farbpalette & Variablen */
   :root {
     --bg-color: #f0f4f2;
     --text-color: #1a1a1a;
@@ -18,17 +22,15 @@
     --btn-text: #fff;
     --border-color: #d4d9d4;
     --shadow: 0 4px 15px rgba(0,0,0,0.1);
+    --accent-color: #4caf50;
+    --accent-bg: #e6f4e6;
   }
-
-  /* Grundlegende Styles */
   body {
     margin: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
   }
-
-  /* Navigation oben */
   .main-nav {
     background-color: var(--nav-bg);
     display: flex;
@@ -39,7 +41,6 @@
     top: 0;
     z-index: 100;
   }
-
   .main-btn {
     background-color: var(--btn-bg);
     color: var(--btn-text);
@@ -57,8 +58,6 @@
   .main-btn:hover, .main-btn.active {
     background-color: var(--btn-hover-bg);
   }
-
-  /* Sub-Navigation unter Klima */
   .sub-nav {
     background-color: #e9f0e8;
     padding: 10px 15px;
@@ -68,7 +67,6 @@
     border-bottom: 1px solid var(--border-color);
     box-shadow: inset 0 -2px 3px rgba(0,0,0,0.05);
   }
-
   .nav-btn {
     background-color: #a7c49c;
     border: none;
@@ -84,15 +82,11 @@
     background-color: #6a9a59;
     color: white;
   }
-
-  /* Module Container */
   .module {
     max-width: 900px;
     margin: 25px auto;
     padding: 0 20px 30px 20px;
   }
-
-  /* Karten-Stil */
   .card {
     background-color: var(--card-bg);
     border-radius: 12px;
@@ -101,13 +95,11 @@
     box-shadow: var(--shadow);
     line-height: 1.5;
   }
-
   h2, h3 {
     color: var(--nav-bg);
     margin-top: 0;
   }
-
-  /* Steuerung: Einzelliste */
+  /* Steuerung */
   #control .control-list {
     list-style: none;
     padding-left: 0;
@@ -123,14 +115,10 @@
     align-items: center;
     justify-content: space-between;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: background-color 0.25s ease;
   }
   #control .control-list li:hover {
     background-color: #c6ddb0;
   }
-
-  /* Steuerung Buttons */
   .toggle-switch {
     position: relative;
     width: 46px;
@@ -162,248 +150,413 @@
     border-radius: 50%;
   }
   input:checked + .slider {
-    background-color: var(--btn-bg);
+    background-color: var(--accent-color);
   }
   input:checked + .slider:before {
     transform: translateX(22px);
   }
-
   /* Dimmer Slider */
   .dimmer-container {
-    margin-top: 8px;
-  }
-  input[type="range"] {
-    width: 100%;
-  }
-
-  /* Watt Anzeige rund */
-  .watt-display {
-    background-color: #d1e6cc;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    color: var(--nav-bg);
-    font-weight: 700;
     display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  .dimmer-slider {
+    -webkit-appearance: none;
+    width: 180px;
+    height: 8px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+  }
+  .dimmer-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-color);
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(76,175,80,0.7);
+    border: none;
+    margin-top: -7px;
+  }
+  .dimmer-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: var(--accent-color);
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(76,175,80,0.7);
+    border: none;
+  }
+  /* Verbrauchsanzeige rund */
+  .power-display {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--accent-bg);
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 1.1rem;
-    box-shadow: inset 0 2px 6px rgba(255,255,255,0.6);
+    font-weight: 700;
+    color: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color);
     user-select: none;
+    font-size: 1.3rem;
   }
-
-  /* Klima Bodenfeuchtigkeit */
-  #soil-moisture {
+  /* Graph Container */
+  .graph-card {
     margin-top: 20px;
   }
-
-  /* Anleitung */
-  #guide .guide-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
-    justify-content: center;
-  }
-  .guide-btn {
-    background-color: var(--btn-bg);
-    color: var(--btn-text);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
-  .guide-btn:hover, .guide-btn.active {
-    background-color: var(--btn-hover-bg);
-  }
-  .guide-section {
-    background-color: var(--card-bg);
-    border-radius: 12px;
-    padding: 25px 30px;
-    box-shadow: var(--shadow);
-  }
-  .guide-section:not(.active) {
-    display: none;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    .main-nav {
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .main-btn {
-      flex: 1 1 100px;
-      margin: 6px 4px;
-      font-size: 0.9rem;
-    }
-    .sub-nav {
-      flex-wrap: wrap;
-    }
-    .nav-btn {
-      flex: 1 1 100px;
-      margin-bottom: 6px;
-    }
+  canvas {
+    max-width: 100%;
+    height: 280px !important;
   }
 </style>
+
 </head>
 <body>
 
-  <nav class="main-nav">
-    <button class="main-btn active" data-main="climate">Klima</button>
-    <button class="main-btn" data-main="control">Steuerung</button>
-    <button class="main-btn" data-main="guide">Anleitung</button>
-  </nav>
+<!-- Navigation -->
+<div class="main-nav">
+  <button class="main-btn active" data-main="climate">Klima</button>
+  <button class="main-btn" data-main="control">Steuerung</button>
+  <button class="main-btn" data-main="guide">Anleitung</button>
+</div>
 
-  <!-- Klima Modul -->
-  <section id="climate" class="module">
-    <nav class="sub-nav">
-      <button class="nav-btn active" data-module="temp">Temperatur</button>
-      <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
-      <button class="nav-btn" data-module="vpd">VPD</button>
-      <button class="nav-btn" data-module="soil-moisture">Bodenfeuchtigkeit</button>
-    </nav>
+<!-- Klima -->
+<div id="climate" class="module active">
+  <div class="sub-nav">
+    <button class="nav-btn active" data-module="temp">Temperatur</button>
+    <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
+    <button class="nav-btn" data-module="vpd">VPD</button>
+    <button class="nav-btn" data-module="soil">Bodenfeuchtigkeit</button>
+  </div>
 
-    <article id="temp" class="sub-module card active">
-      <h2>Temperatur</h2>
-      <p>Hier kommen Temperaturwerte und Graphen hin.</p>
-    </article>
-    <article id="humidity" class="sub-module card">
-      <h2>Luftfeuchtigkeit</h2>
-      <p>Hier kommen Luftfeuchtigkeitswerte und Graphen hin.</p>
-    </article>
-    <article id="vpd" class="sub-module card">
-      <h2>VPD (Vapor Pressure Deficit)</h2>
-      <p>Hier kommen VPD-Werte und Graphen hin.</p>
-    </article>
-    <article id="soil-moisture" class="sub-module card">
-      <h2>Bodenfeuchtigkeit</h2>
-      <p>Hier kommen Messwerte und Graphen zur Bodenfeuchtigkeit hin.</p>
-    </article>
-  </section>
+  <!-- Temperatur -->
+  <div id="temp" class="sub-module active card">
+    <h2>Temperatur</h2>
+    <p>Aktuelle Temperatur: <strong id="temp-now">-- °C</strong></p>
+    <div class="graph-card">
+      <canvas id="tempChart"></canvas>
+    </div>
+  </div>
 
-  <!-- Steuerung Modul -->
-  <section id="control" class="module" style="display:none;">
+  <!-- Luftfeuchtigkeit -->
+  <div id="humidity" class="sub-module card">
+    <h2>Luftfeuchtigkeit</h2>
+    <p>Aktuelle Luftfeuchtigkeit: <strong id="humidity-now">-- %</strong></p>
+    <div class="graph-card">
+      <canvas id="humidityChart"></canvas>
+    </div>
+  </div>
+
+  <!-- VPD -->
+  <div id="vpd" class="sub-module card">
+    <h2>VPD (Vapor Pressure Deficit)</h2>
+    <p>Aktueller VPD-Wert: <strong id="vpd-now">-- kPa</strong></p>
+    <div class="graph-card">
+      <canvas id="vpdChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Bodenfeuchtigkeit -->
+  <div id="soil" class="sub-module card">
+    <h2>Bodenfeuchtigkeit</h2>
+    <p>Aktuelle Bodenfeuchtigkeit: <strong id="soil-now">-- %</strong></p>
+    <div class="graph-card">
+      <canvas id="soilChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Steuerung -->
+<div id="control" class="module">
+  <div class="card">
     <h2>Steuerung</h2>
     <ul class="control-list">
       <li>
         Licht
-        <label class="toggle-switch" title="Licht Ein/Aus">
-          <input type="checkbox" id="light-toggle" />
-          <span class="slider"></span>
-        </label>
-      </li>
-      <li>
-        Dimmer
         <div class="dimmer-container">
-          <input type="range" id="light-dimmer" min="0" max="100" value="50" />
+          <input type="range" min="0" max="100" value="50" class="dimmer-slider" id="lightDimmer" />
+          <div class="power-display" id="lightPower">-- W</div>
+          <label class="toggle-switch" title="Licht An/Aus">
+            <input type="checkbox" id="lightSwitch" checked />
+            <span class="slider"></span>
+          </label>
         </div>
       </li>
       <li>
-        Verbrauchte Watt
-        <div class="watt-display" id="watt-display">120 W</div>
-      </li>
-      <li>
         Wasserpumpe
-        <label class="toggle-switch" title="Wasserpumpe Ein/Aus">
-          <input type="checkbox" id="pump-toggle" />
+        <label class="toggle-switch" title="Wasserpumpe An/Aus">
+          <input type="checkbox" id="pumpSwitch" />
           <span class="slider"></span>
         </label>
       </li>
       <li>
         Luftbefeuchter
-        <label class="toggle-switch" title="Luftbefeuchter Ein/Aus">
-          <input type="checkbox" id="humidifier-toggle" />
+        <label class="toggle-switch" title="Luftbefeuchter An/Aus">
+          <input type="checkbox" id="humidifierSwitch" />
           <span class="slider"></span>
         </label>
       </li>
     </ul>
-  </section>
+  </div>
+</div>
 
-  <!-- Anleitung Modul -->
-  <section id="guide" class="module" style="display:none;">
+<!-- Anleitung -->
+<div id="guide" class="module">
+  <div class="card">
     <h2>Anleitung</h2>
-    <nav class="guide-nav">
-      <button class="guide-btn active" data-guide="ph">pH-Wert</button>
+    <div class="guide-nav">
+      <button class="guide-btn active" data-guide="erde">Erde</button>
+      <button class="guide-btn" data-guide="wasser">Wasser</button>
+      <button class="guide-btn" data-guide="duenger">Dünger</button>
+      <button class="guide-btn" data-guide="ph">pH-Wert</button>
+      <button class="guide-btn" data-guide="ecppm">EC / PPM</button>
       <button class="guide-btn" data-guide="licht">Licht Theorie</button>
       <button class="guide-btn" data-guide="training">Trainingsmethoden</button>
-      <!-- Weitere Buttons ... -->
-    </nav>
-    <article id="ph" class="guide-section active">
+    </div>
+    <div id="erde" class="guide-section card active">
+      <h3>Erde</h3>
+      <p>Wähle eine lockere, nährstoffreiche Erde mit gutem Wasserabfluss.</p>
+    </div>
+    <div id="wasser" class="guide-section card">
+      <h3>Wasser</h3>
+      <p>Regelmäßige Bewässerung mit abgestandenem Wasser. Staunässe vermeiden.</p>
+    </div>
+    <div id="duenger" class="guide-section card">
+      <h3>Dünger</h3>
+      <p>Organisch oder mineralisch, je nach Phase. Dosierung beachten.</p>
+    </div>
+    <div id="ph" class="guide-section card">
       <h3>pH-Wert</h3>
-      <p>Hier steht die pH-Wert Anleitung.</p>
-    </article>
-    <article id="licht" class="guide-section">
+      <p>Ideal zwischen 5.8 und 6.5. Regelmäßig mit Teststreifen kontrollieren.</p>
+    </div>
+    <div id="ecppm" class="guide-section card">
+      <h3>EC / PPM</h3>
+      <p>Elektrische Leitfähigkeit misst die Nährstoffkonzentration.</p>
+    </div>
+    <div id="licht" class="guide-section card">
       <h3>Licht Theorie</h3>
-      <p>Hier steht die Licht-Theorie.</p>
-    </article>
-    <article id="training" class="guide-section">
+      <p>PAR, Lumen, DLI verstehen. Optimale Beleuchtung mit LED oder NDL.</p>
+    </div>
+    <div id="training" class="guide-section card">
       <h3>Trainingsmethoden</h3>
-      <p>Hier stehen die Trainingsmethoden.</p>
-    </article>
-  </section>
+      <p>LST, Topping, Scrogging u.v.m. für besseren Ertrag und Kontrolle.</p>
+    </div>
+  </div>
+</div>
 
 <script>
-  // Navigation Hauptmenü
-  const mainButtons = document.querySelectorAll('.main-btn');
-  const modules = document.querySelectorAll('.module');
-  mainButtons.forEach(btn => {
+  // Navigation Hauptmodule
+  document.querySelectorAll('.main-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      // Hauptmodule anzeigen
-      const target = btn.dataset.main;
-      modules.forEach(m => {
-        m.style.display = (m.id === target) ? 'block' : 'none';
-      });
-      // Button aktiv markieren
-      mainButtons.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.main-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      // Wenn Klima aktiv, dann erstes Untermodul aktivieren
-      if (target === 'climate') {
-        activateSubModule('temp');
-        // Unter-Navigation Buttons aktivieren
-        activateSubNav('temp');
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.getElementById(btn.dataset.main).classList.add('active');
+      // Reset Submodule nav buttons & submodules for Klima
+      if(btn.dataset.main === 'climate') {
+        const climateModule = document.getElementById('climate');
+        climateModule.querySelectorAll('.nav-btn').forEach((b,i) => {
+          b.classList.toggle('active', i===0);
+        });
+        climateModule.querySelectorAll('.sub-module').forEach((sm,i) => {
+          sm.classList.toggle('active', i===0);
+        });
       }
     });
   });
 
-  // Sub-Navigation Klima
-  const subNavButtons = document.querySelectorAll('#climate .nav-btn');
-  const subModules = document.querySelectorAll('#climate .sub-module');
-  subNavButtons.forEach(btn => {
+  // Navigation Submodule Klima
+  document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const target = btn.dataset.module;
-      activateSubModule(target);
-      activateSubNav(target);
+      const parent = btn.closest('.sub-nav');
+      parent.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const targetId = btn.dataset.module;
+      btn.closest('#climate').querySelectorAll('.sub-module').forEach(sm => {
+        sm.classList.toggle('active', sm.id === targetId);
+      });
     });
   });
-
-  function activateSubModule(id) {
-    subModules.forEach(m => {
-      m.classList.toggle('active', m.id === id);
-    });
-  }
-  function activateSubNav(id) {
-    subNavButtons.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.module === id);
-    });
-  }
 
   // Anleitung Navigation
-  const guideButtons = document.querySelectorAll('#guide .guide-btn');
-  const guideSections = document.querySelectorAll('#guide .guide-section');
-  guideButtons.forEach(btn => {
+  document.querySelectorAll('.guide-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const target = btn.dataset.guide;
-      guideSections.forEach(s => {
-        s.classList.toggle('active', s.id === target);
-      });
-      guideButtons.forEach(b => b.classList.remove('active'));
+      btn.closest('.guide-nav').querySelectorAll('.guide-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      const target = btn.dataset.guide;
+      btn.closest('.card').querySelectorAll('.guide-section').forEach(sec => {
+        sec.classList.toggle('active', sec.id === target);
+      });
     });
   });
+
+  // ThingSpeak API URLs - Ersetze mit deinen Channel-IDs & API-Keys
+  // Beispiel Kanal-IDs: Hier Dummy-Werte, bitte ersetzen!
+  const channelIDs = {
+    temp: 123456,
+    humidity: 123456,
+    vpd: 123456,
+    soil: 123456
+  };
+  const readAPIKey = 'DEIN_API_KEY_HIER';
+
+  // Hilfsfunktion: ThingSpeak JSONP Abfrage mit fetch+Promise
+  async function fetchThingSpeakField(channelID, field, results=50) {
+    const url = `https://api.thingspeak.com/channels/${channelID}/fields/${field}.json?api_key=${readAPIKey}&results=${results}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Fehler bei ThingSpeak API");
+    const data = await res.json();
+    return data.feeds;
+  }
+
+  // Funktion um Werte aus Feeds zu extrahieren
+  function parseFeeds(feeds, field) {
+    return feeds
+      .filter(f => f[field] !== null)
+      .map(f => ({
+        time: new Date(f.created_at),
+        value: parseFloat(f[field])
+      }));
+  }
+
+  // Globale Chart-Objekte
+  let charts = {};
+
+  // Funktion Chart erstellen/aktualisieren
+  function createChart(ctx, label, dataPoints, color) {
+    if(charts[ctx.canvas.id]) {
+      charts[ctx.canvas.id].data.datasets[0].data = dataPoints;
+      charts[ctx.canvas.id].update();
+      return;
+    }
+    charts[ctx.canvas.id] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: label,
+          data: dataPoints,
+          borderColor: color,
+          backgroundColor: color+'55',
+          fill: true,
+          cubicInterpolationMode: 'monotone',
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2,
+          hoverRadius: 4,
+          hoverBorderWidth: 3,
+          parsing: {
+            xAxisKey: 'time',
+            yAxisKey: 'value'
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'nearest',
+          intersect: false
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'hour',
+              displayFormats: { hour: 'HH:mm' }
+            },
+            ticks: {
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 6
+            }
+          },
+          y: {
+            beginAtZero: false,
+            ticks: { maxTicksLimit: 6 }
+          }
+        },
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    });
+  }
+
+  // Werte und Charts aktualisieren
+  async function updateAllData() {
+    try {
+      // Temperatur (Field 1)
+      const tempFeeds = await fetchThingSpeakField(channelIDs.temp, 1);
+      const tempData = parseFeeds(tempFeeds, 'field1');
+      if(tempData.length) {
+        document.getElementById('temp-now').textContent = tempData[tempData.length-1].value.toFixed(1) + " °C";
+        createChart(document.getElementById('tempChart').getContext('2d'), "Temperatur (°C)", tempData, '#e74c3c');
+      }
+      // Luftfeuchtigkeit (Field 2)
+      const humFeeds = await fetchThingSpeakField(channelIDs.humidity, 2);
+      const humData = parseFeeds(humFeeds, 'field2');
+      if(humData.length) {
+        document.getElementById('humidity-now').textContent = humData[humData.length-1].value.toFixed(1) + " %";
+        createChart(document.getElementById('humidityChart').getContext('2d'), "Luftfeuchtigkeit (%)", humData, '#3498db');
+      }
+      // VPD (Field 3)
+      const vpdFeeds = await fetchThingSpeakField(channelIDs.vpd, 3);
+      const vpdData = parseFeeds(vpdFeeds, 'field3');
+      if(vpdData.length) {
+        document.getElementById('vpd-now').textContent = vpdData[vpdData.length-1].value.toFixed(2) + " kPa";
+        createChart(document.getElementById('vpdChart').getContext('2d'), "VPD (kPa)", vpdData, '#27ae60');
+      }
+      // Bodenfeuchtigkeit (Field 4)
+      const soilFeeds = await fetchThingSpeakField(channelIDs.soil, 4);
+      const soilData = parseFeeds(soilFeeds, 'field4');
+      if(soilData.length) {
+        document.getElementById('soil-now').textContent = soilData[soilData.length-1].value.toFixed(1) + " %";
+        createChart(document.getElementById('soilChart').getContext('2d'), "Bodenfeuchtigkeit (%)", soilData, '#9b59b6');
+      }
+    } catch (e) {
+      console.error("Datenaktualisierung fehlgeschlagen:", e);
+    }
+  }
+
+  // Initial Update & Wiederholung alle 3 Min.
+  updateAllData();
+  setInterval(updateAllData, 180000);
+
+  // Steuerungs-UI (Dimmer & Schalter)
+  const lightDimmer = document.getElementById('lightDimmer');
+  const lightPower = document.getElementById('lightPower');
+  const lightSwitch = document.getElementById('lightSwitch');
+  const pumpSwitch = document.getElementById('pumpSwitch');
+  const humidifierSwitch = document.getElementById('humidifierSwitch');
+
+  // Beispiel Berechnung Verbrauch (50 W bei 100% Licht)
+  function updateLightPower() {
+    if(lightSwitch.checked) {
+      const power = Math.round(lightDimmer.value * 0.5); // 0-50 W
+      lightPower.textContent = power + ' W';
+    } else {
+      lightPower.textContent = '0 W';
+    }
+  }
+  lightDimmer.addEventListener('input', updateLightPower);
+  lightSwitch.addEventListener('change', () => {
+    updateLightPower();
+    lightDimmer.disabled = !lightSwitch.checked;
+  });
+
+  // Initial update
+  updateLightPower();
+
+  // TODO: Steuerungs-Events an ESP senden (WebSocket/AJAX)
+
 </script>
 
 </body>
 </html>
+
