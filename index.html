@@ -18,6 +18,7 @@
             --vpd-low: #2196F3;
             --dropdown-bg: white;
             --dropdown-border: #ddd;
+            --nav-bg: #f0f0f0;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -28,6 +29,7 @@
                 --btn-bg: #2E7D32;
                 --dropdown-bg: #2d2d2d;
                 --dropdown-border: #444;
+                --nav-bg: #252525;
             }
         }
         
@@ -35,9 +37,37 @@
             font-family: Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 10px;
+            padding: 0;
+            margin: 0;
             max-width: 100%;
             overflow-x: hidden;
+        }
+        
+        .nav-menu {
+            background-color: var(--nav-bg);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid var(--dropdown-border);
+        }
+        
+        .nav-btn {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .module {
+            display: none;
+            padding: 15px;
+        }
+        
+        .module.active {
+            display: block;
         }
         
         .card {
@@ -46,14 +76,6 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        
-        h1, h2 {
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
         .chart-header {
@@ -79,17 +101,41 @@
             margin-bottom: 10px;
         }
         
-        .info-container {
+        .info-dropdown {
             margin-top: 15px;
-            padding: 10px;
-            background-color: var(--card-bg);
-            border-radius: 5px;
-            border-left: 4px solid var(--btn-bg);
         }
         
-        .info-container h3 {
-            margin-top: 0;
-            color: var(--btn-bg);
+        .info-btn {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-btn::after {
+            content: "▼";
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+        
+        .info-btn.active::after {
+            transform: rotate(180deg);
+        }
+        
+        .info-content {
+            display: none;
+            padding: 10px;
+            background-color: var(--card-bg);
+            border-radius: 0 0 5px 5px;
+            border: 1px solid var(--dropdown-border);
+            border-top: none;
         }
         
         .vpd-table {
@@ -128,140 +174,152 @@
             .card {
                 padding: 20px;
             }
-            
-            .vpd-table {
-                font-size: 13px;
-            }
         }
     </style>
 </head>
 <body>
-    <h1>🌱 GrowController Pro</h1>
+    <div class="nav-menu">
+        <button class="nav-btn" data-module="temp">Temperatur</button>
+        <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
+        <button class="nav-btn" data-module="vpd">VPD</button>
+    </div>
     
-    <!-- Temperatur Card -->
-    <div class="card">
-        <div class="chart-header">
-            <h2>Temperatur (°C)</h2>
-            <select class="time-select">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-                <option value="720">30 Tage</option>
-            </select>
-        </div>
-        <div class="chart-container">
-            <canvas id="tempChart"></canvas>
-        </div>
-        <div class="info-container">
-            <h3>Optimale Temperaturwerte</h3>
-            <ul>
-                <li><strong>Keimling:</strong> 20-25°C</li>
-                <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
-                <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
-            </ul>
+    <!-- Temperatur Modul -->
+    <div id="temp-module" class="module">
+        <div class="card">
+            <div class="chart-header">
+                <h2>Temperatur (°C)</h2>
+                <select class="time-select">
+                    <option value="1">1 Stunde</option>
+                    <option value="6">6 Stunden</option>
+                    <option value="24" selected>24 Stunden</option>
+                    <option value="168">7 Tage</option>
+                    <option value="720">30 Tage</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="tempChart"></canvas>
+            </div>
+            <div class="info-dropdown">
+                <button class="info-btn">ℹ️ Optimale Temperaturwerte</button>
+                <div class="info-content">
+                    <ul>
+                        <li><strong>Keimling:</strong> 20-25°C</li>
+                        <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
+                        <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     
-    <!-- Luftfeuchtigkeit Card -->
-    <div class="card">
-        <div class="chart-header">
-            <h2>Luftfeuchtigkeit (%)</h2>
-            <select class="time-select">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-                <option value="720">30 Tage</option>
-            </select>
-        </div>
-        <div class="chart-container">
-            <canvas id="humidityChart"></canvas>
-        </div>
-        <div class="info-container">
-            <h3>Optimale Luftfeuchtigkeit</h3>
-            <ul>
-                <li><strong>Keimling:</strong> 65-70%</li>
-                <li><strong>Wachstum:</strong> 40-70%</li>
-                <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
-            </ul>
+    <!-- Luftfeuchtigkeit Modul -->
+    <div id="humidity-module" class="module">
+        <div class="card">
+            <div class="chart-header">
+                <h2>Luftfeuchtigkeit (%)</h2>
+                <select class="time-select">
+                    <option value="1">1 Stunde</option>
+                    <option value="6">6 Stunden</option>
+                    <option value="24" selected>24 Stunden</option>
+                    <option value="168">7 Tage</option>
+                    <option value="720">30 Tage</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="humidityChart"></canvas>
+            </div>
+            <div class="info-dropdown">
+                <button class="info-btn">ℹ️ Optimale Luftfeuchtigkeit</button>
+                <div class="info-content">
+                    <ul>
+                        <li><strong>Keimling:</strong> 65-70%</li>
+                        <li><strong>Wachstum:</strong> 40-70%</li>
+                        <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     
-    <!-- VPD Card -->
-    <div class="card">
-        <div class="chart-header">
-            <h2>VPD (kPa)</h2>
-            <select class="time-select">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-                <option value="720">30 Tage</option>
-            </select>
-        </div>
-        <div class="chart-container">
-            <canvas id="vpdChart"></canvas>
-        </div>
-        <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
-        <div class="info-container">
-            <h3>VPD (Dampfdruckdefizit)</h3>
-            <p><strong>Optimalbereiche:</strong></p>
-            <ul>
-                <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
-                <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
-                <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
-            </ul>
-            
-            <h4>VPD-Referenztabelle</h4>
-            <table class="vpd-table">
-                <thead>
-                    <tr>
-                        <th>Temp (°C)</th>
-                        <th>40% RH</th>
-                        <th>50% RH</th>
-                        <th>60% RH</th>
-                        <th>70% RH</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>20</td>
-                        <td>0.93</td>
-                        <td>0.70</td>
-                        <td>0.47</td>
-                        <td>0.23</td>
-                    </tr>
-                    <tr>
-                        <td>22</td>
-                        <td>1.05</td>
-                        <td>0.81</td>
-                        <td>0.57</td>
-                        <td>0.33</td>
-                    </tr>
-                    <tr>
-                        <td>24</td>
-                        <td>1.19</td>
-                        <td>0.93</td>
-                        <td>0.68</td>
-                        <td>0.42</td>
-                    </tr>
-                    <tr>
-                        <td>26</td>
-                        <td>1.34</td>
-                        <td>1.07</td>
-                        <td>0.80</td>
-                        <td>0.53</td>
-                    </tr>
-                    <tr>
-                        <td>28</td>
-                        <td>1.51</td>
-                        <td>1.23</td>
-                        <td>0.94</td>
-                        <td>0.65</td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- VPD Modul -->
+    <div id="vpd-module" class="module">
+        <div class="card">
+            <div class="chart-header">
+                <h2>VPD (kPa)</h2>
+                <select class="time-select">
+                    <option value="1">1 Stunde</option>
+                    <option value="6">6 Stunden</option>
+                    <option value="24" selected>24 Stunden</option>
+                    <option value="168">7 Tage</option>
+                    <option value="720">30 Tage</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="vpdChart"></canvas>
+            </div>
+            <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
+            <div class="info-dropdown">
+                <button class="info-btn">ℹ️ VPD-Informationen</button>
+                <div class="info-content">
+                    <p><strong>Optimalbereiche:</strong></p>
+                    <ul>
+                        <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
+                        <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
+                        <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
+                    </ul>
+                    
+                    <h4>VPD-Referenztabelle</h4>
+                    <table class="vpd-table">
+                        <thead>
+                            <tr>
+                                <th>Temp (°C)</th>
+                                <th>40% RH</th>
+                                <th>50% RH</th>
+                                <th>60% RH</th>
+                                <th>70% RH</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>20</td>
+                                <td>0.93</td>
+                                <td>0.70</td>
+                                <td>0.47</td>
+                                <td>0.23</td>
+                            </tr>
+                            <tr>
+                                <td>22</td>
+                                <td>1.05</td>
+                                <td>0.81</td>
+                                <td>0.57</td>
+                                <td>0.33</td>
+                            </tr>
+                            <tr>
+                                <td>24</td>
+                                <td>1.19</td>
+                                <td>0.93</td>
+                                <td>0.68</td>
+                                <td>0.42</td>
+                            </tr>
+                            <tr>
+                                <td>26</td>
+                                <td>1.34</td>
+                                <td>1.07</td>
+                                <td>0.80</td>
+                                <td>0.53</td>
+                            </tr>
+                            <tr>
+                                <td>28</td>
+                                <td>1.51</td>
+                                <td>1.23</td>
+                                <td>0.94</td>
+                                <td>0.65</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -386,36 +444,35 @@
                     vpd: calculateVPD(parseFloat(f.field1), parseFloat(f.field2))
                 })).filter(f => !isNaN(f.temp) && !isNaN(f.humidity));
                 
-                // Charts aktualisieren
-                tempChart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.temp }));
-                humidityChart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.humidity }));
-                vpdChart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.vpd }));
+                // Chart aktualisieren
+                if (chart === tempChart) {
+                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.temp }));
+                } else if (chart === humidityChart) {
+                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.humidity }));
+                } else if (chart === vpdChart) {
+                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.vpd }));
+                    
+                    // Aktuellen VPD-Wert anzeigen
+                    if (feeds.length > 0) {
+                        const lastVpd = feeds[feeds.length-1].vpd;
+                        const vpdElement = document.getElementById('currentVpd');
+                        vpdElement.textContent = `Aktueller VPD: ${lastVpd} kPa`;
+                        
+                        // Farbe nach VPD-Bereich
+                        if (lastVpd < 0.8) {
+                            vpdElement.style.background = 'var(--vpd-low)';
+                        } else if (lastVpd > 1.2) {
+                            vpdElement.style.background = 'var(--vpd-high)';
+                        } else {
+                            vpdElement.style.background = 'var(--vpd-optimal)';
+                        }
+                    }
+                }
                 
                 // Zeitachse anpassen
                 const timeUnit = hours >= 24 ? 'day' : 'hour';
-                tempChart.options.scales.x.time.unit = timeUnit;
-                humidityChart.options.scales.x.time.unit = timeUnit;
-                vpdChart.options.scales.x.time.unit = timeUnit;
-                
-                tempChart.update();
-                humidityChart.update();
-                vpdChart.update();
-                
-                // Aktuellen VPD-Wert anzeigen
-                if (feeds.length > 0) {
-                    const lastVpd = feeds[feeds.length-1].vpd;
-                    const vpdElement = document.getElementById('currentVpd');
-                    vpdElement.textContent = `Aktueller VPD: ${lastVpd} kPa`;
-                    
-                    // Farbe nach VPD-Bereich
-                    if (lastVpd < 0.8) {
-                        vpdElement.style.background = 'var(--vpd-low)';
-                    } else if (lastVpd > 1.2) {
-                        vpdElement.style.background = 'var(--vpd-high)';
-                    } else {
-                        vpdElement.style.background = 'var(--vpd-optimal)';
-                    }
-                }
+                chart.options.scales.x.time.unit = timeUnit;
+                chart.update();
                 
             } catch (error) {
                 console.error("Fehler:", error);
@@ -442,6 +499,38 @@
             });
         });
         
+        // Event-Listener für Nav-Buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduleId = this.dataset.module;
+                
+                // Alle Module verstecken
+                document.querySelectorAll('.module').forEach(mod => {
+                    mod.classList.remove('active');
+                });
+                
+                // Aktives Modul anzeigen
+                document.getElementById(`${moduleId}-module`).classList.add('active');
+                
+                // Nav-Buttons zurücksetzen
+                document.querySelectorAll('.nav-btn').forEach(b => {
+                    b.style.opacity = '0.7';
+                });
+                
+                // Aktiven Button markieren
+                this.style.opacity = '1';
+            });
+        });
+        
+        // Event-Listener für Info-Dropdowns
+        document.querySelectorAll('.info-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+        
         // Dark Mode Änderungen überwachen
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             const colors = getChartColors();
@@ -458,6 +547,7 @@
         
         // Initialisierung
         initCharts();
+        document.querySelector('.nav-btn[data-module="temp"]').click();
         document.querySelectorAll('.time-select').forEach(select => {
             select.dispatchEvent(new Event('change'));
         });
