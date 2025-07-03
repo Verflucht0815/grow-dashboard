@@ -1,16 +1,28 @@
-.control-row {
+.control-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.control-list li {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
     gap: 12px;
+}
+
+.control-list label {
+    flex: 1;
+    font-weight: 600;
 }
 
 input[type="range"] {
     flex: 1;
 }
 
-#wattGauge {
+#gauge {
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -25,6 +37,11 @@ input[type="range"] {
     user-select: none;
 }
 
+#gauge {
+    margin-left: auto;
+}
+
+/* Schalter Styling (wie vorher) */
 .switch {
   position: relative;
   display: inline-block;
