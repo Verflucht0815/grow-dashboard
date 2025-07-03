@@ -1,18 +1,194 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>🌱 GrowController Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/moment"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <meta charset="UTF-8" />
+    <title>🌱 GrowController Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
 </head>
 <body>
-  <!-- Deine HTML-Struktur (Header, Nav, Charts, Guide etc.) -->
-  <!-- Am besten kopierst du sie aus deiner letzten Version oder ich liefere sie dir extra aus -->
+    <!-- Hauptmenü -->
+    <div class="main-nav">
+        <button class="main-btn" data-main="climate">Klima</button>
+        <button class="main-btn" data-main="control">Steuerung</button>
+        <button class="main-btn" data-main="guide">Anleitung</button>
+    </div>
 
-  <script src="js/script.js"></script>
+    <!-- Klima Modul -->
+    <div id="climate" class="module">
+        <div class="sub-nav">
+            <button class="nav-btn" data-module="temp">Temperatur</button>
+            <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
+            <button class="nav-btn" data-module="vpd">VPD</button>
+        </div>
+
+        <!-- Temperatur Modul -->
+        <div id="temp-module" class="sub-module">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>Temperatur (°C)</h2>
+                    <select class="time-select">
+                        <option value="1">1 Stunde</option>
+                        <option value="6">6 Stunden</option>
+                        <option value="24" selected>24 Stunden</option>
+                        <option value="168">7 Tage</option>
+                        <option value="720">30 Tage</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="info-dropdown">
+                    <button class="info-btn">ℹ️ Optimale Temperaturwerte</button>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>Keimling:</strong> 20-25°C</li>
+                            <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
+                            <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Luftfeuchtigkeit Modul -->
+        <div id="humidity-module" class="sub-module">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>Luftfeuchtigkeit (%)</h2>
+                    <select class="time-select">
+                        <option value="1">1 Stunde</option>
+                        <option value="6">6 Stunden</option>
+                        <option value="24" selected>24 Stunden</option>
+                        <option value="168">7 Tage</option>
+                        <option value="720">30 Tage</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="humidityChart"></canvas>
+                </div>
+                <div class="info-dropdown">
+                    <button class="info-btn">ℹ️ Optimale Luftfeuchtigkeit</button>
+                    <div class="info-content">
+                        <ul>
+                            <li><strong>Keimling:</strong> 65-70%</li>
+                            <li><strong>Wachstum:</strong> 40-70%</li>
+                            <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VPD Modul -->
+        <div id="vpd-module" class="sub-module">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>VPD (kPa)</h2>
+                    <select class="time-select">
+                        <option value="1">1 Stunde</option>
+                        <option value="6">6 Stunden</option>
+                        <option value="24" selected>24 Stunden</option>
+                        <option value="168">7 Tage</option>
+                        <option value="720">30 Tage</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="vpdChart"></canvas>
+                </div>
+                <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
+                <div class="info-dropdown">
+                    <button class="info-btn">ℹ️ VPD-Informationen</button>
+                    <div class="info-content">
+                        <p><strong>Optimalbereiche:</strong></p>
+                        <ul>
+                            <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
+                            <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
+                            <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
+                        </ul>
+                        <h4>VPD-Referenztabelle</h4>
+                        <table class="vpd-table">
+                            <thead>
+                                <tr>
+                                    <th>Temp (°C)</th>
+                                    <th>40% RH</th>
+                                    <th>50% RH</th>
+                                    <th>60% RH</th>
+                                    <th>70% RH</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>20</td><td>0.93</td><td>0.70</td><td>0.47</td><td>0.23</td></tr>
+                                <tr><td>22</td><td>1.05</td><td>0.81</td><td>0.57</td><td>0.33</td></tr>
+                                <tr><td>24</td><td>1.19</td><td>0.93</td><td>0.68</td><td>0.42</td></tr>
+                                <tr><td>26</td><td>1.34</td><td>1.07</td><td>0.80</td><td>0.53</td></tr>
+                                <tr><td>28</td><td>1.51</td><td>1.23</td><td>0.94</td><td>0.65</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Steuerung -->
+    <div id="control" class="module">
+        <div class="card">
+            <h2>Steuerung</h2>
+            <button class="main-btn">💡 Licht An/Aus</button>
+            <button class="main-btn">💧 Wasserpumpe</button>
+            <button class="main-btn">🌫️ Luftbefeuchter</button>
+        </div>
+    </div>
+
+    <!-- Anleitung -->
+    <div id="guide" class="module">
+        <div class="card">
+            <h2>Anleitung</h2>
+            <div class="guide-nav">
+                <button class="guide-btn" data-guide="erde">Erde</button>
+                <button class="guide-btn" data-guide="wasser">Wasser</button>
+                <button class="guide-btn" data-guide="duenger">Dünger</button>
+                <button class="guide-btn" data-guide="ph">pH-Wert</button>
+                <button class="guide-btn" data-guide="ecppm">EC / PPM</button>
+                <button class="guide-btn" data-guide="licht">Licht Theorie</button>
+                <button class="guide-btn" data-guide="training">Trainingsmethoden</button>
+            </div>
+
+            <div id="erde" class="guide-section card">
+                <h3>Erde</h3>
+                <p>Wähle eine lockere, nährstoffreiche Erde mit gutem Wasserabfluss.</p>
+            </div>
+            <div id="wasser" class="guide-section card">
+                <h3>Wasser</h3>
+                <p>Regelmäßige Bewässerung mit abgestandenem Wasser. Staunässe vermeiden.</p>
+            </div>
+            <div id="duenger" class="guide-section card">
+                <h3>Dünger</h3>
+                <p>Organisch oder mineralisch, je nach Phase. Dosierung beachten.</p>
+            </div>
+            <div id="ph" class="guide-section card">
+                <h3>pH-Wert</h3>
+                <p>Ideal zwischen 5.8 und 6.5. Regelmäßig mit Teststreifen kontrollieren.</p>
+            </div>
+            <div id="ecppm" class="guide-section card">
+                <h3>EC / PPM</h3>
+                <p>Elektrische Leitfähigkeit misst die Nährstoffkonzentration.</p>
+            </div>
+            <div id="licht" class="guide-section card">
+                <h3>Licht Theorie</h3>
+                <p>PAR, Lumen, DLI verstehen. Optimale Beleuchtung mit LED oder NDL.</p>
+            </div>
+            <div id="training" class="guide-section card">
+                <h3>Trainingsmethoden</h3>
+                <p>LST, Topping, Scrogging u.v.m. für besseren Ertrag und Kontrolle.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
 </body>
 </html>
