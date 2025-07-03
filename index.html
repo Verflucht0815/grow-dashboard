@@ -16,6 +16,8 @@
             --vpd-optimal: #4CAF50;
             --vpd-high: #FF9800;
             --vpd-low: #2196F3;
+            --dropdown-bg: white;
+            --dropdown-border: #ddd;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -24,6 +26,8 @@
                 --text-color: #f5f5f5;
                 --card-bg: #1e1e1e;
                 --btn-bg: #2E7D32;
+                --dropdown-bg: #2d2d2d;
+                --dropdown-border: #444;
             }
         }
         
@@ -46,33 +50,26 @@
         }
         
         h1, h2 {
-            text-align: center;
             margin-bottom: 15px;
-        }
-        
-        .time-btn {
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
-            border: none;
-            padding: 8px 12px;
-            margin: 3px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        
-        .time-btn.active {
-            transform: scale(1.05);
-            box-shadow: 0 0 5px var(--btn-bg);
-        }
-        
-        .btn-container {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 15px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        select {
+            background-color: var(--dropdown-bg);
+            color: var(--text-color);
+            border: 1px solid var(--dropdown-border);
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 14px;
         }
         
         .chart-container {
@@ -82,45 +79,29 @@
             margin-bottom: 10px;
         }
         
-        .info-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            opacity: 0.7;
-            font-size: 12px;
-            cursor: help;
-            text-decoration: underline;
-            display: block;
-            margin: 5px auto;
-            text-align: center;
-        }
-        
-        .info-box {
-            display: none;
-            background-color: var(--card-bg);
-            border: 1px solid var(--btn-bg);
-            border-radius: 5px;
+        .info-container {
+            margin-top: 15px;
             padding: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            animation: fadeIn 0.3s;
+            background-color: var(--card-bg);
+            border-radius: 5px;
+            border-left: 4px solid var(--btn-bg);
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .info-container h3 {
+            margin-top: 0;
+            color: var(--btn-bg);
         }
         
         .vpd-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 14px;
         }
         
         .vpd-table th, .vpd-table td {
             border: 1px solid var(--text-color);
-            padding: 8px;
+            padding: 6px;
             text-align: center;
         }
         
@@ -131,10 +112,12 @@
         
         .vpd-value {
             font-weight: bold;
-            padding: 5px;
-            border-radius: 3px;
+            padding: 8px;
+            border-radius: 4px;
             text-align: center;
-            margin-top: 5px;
+            margin: 10px 0;
+            background-color: var(--btn-bg);
+            color: white;
         }
         
         @media (min-width: 768px) {
@@ -146,10 +129,8 @@
                 padding: 20px;
             }
             
-            .info-box {
-                max-width: 80%;
-                margin-left: auto;
-                margin-right: auto;
+            .vpd-table {
+                font-size: 13px;
             }
         }
     </style>
@@ -157,64 +138,82 @@
 <body>
     <h1>🌱 GrowController Pro</h1>
     
-    <div class="btn-container">
-        <button class="time-btn">1h</button>
-        <button class="time-btn">6h</button>
-        <button class="time-btn active">24h</button>
-        <button class="time-btn">7d</button>
-    </div>
-    
     <!-- Temperatur Card -->
     <div class="card">
-        <h2>Temperatur (°C)</h2>
+        <div class="chart-header">
+            <h2>Temperatur (°C)</h2>
+            <select class="time-select">
+                <option value="1">1 Stunde</option>
+                <option value="6">6 Stunden</option>
+                <option value="24" selected>24 Stunden</option>
+                <option value="168">7 Tage</option>
+                <option value="720">30 Tage</option>
+            </select>
+        </div>
         <div class="chart-container">
             <canvas id="tempChart"></canvas>
         </div>
-        <button class="info-btn">ℹ️ Optimale Werte anzeigen</button>
-        <div class="info-box">
-            <p><strong>Optimalbereich für Cannabis:</strong></p>
+        <div class="info-container">
+            <h3>Optimale Temperaturwerte</h3>
             <ul>
-                <li>Keimling: 20-25°C</li>
-                <li>Wachstum: 22-28°C (Tag), 18-22°C (Nacht)</li>
-                <li>Blüte: 20-26°C (Tag), 18-21°C (Nacht)</li>
+                <li><strong>Keimling:</strong> 20-25°C</li>
+                <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
+                <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
             </ul>
         </div>
     </div>
     
     <!-- Luftfeuchtigkeit Card -->
     <div class="card">
-        <h2>Luftfeuchtigkeit (%)</h2>
+        <div class="chart-header">
+            <h2>Luftfeuchtigkeit (%)</h2>
+            <select class="time-select">
+                <option value="1">1 Stunde</option>
+                <option value="6">6 Stunden</option>
+                <option value="24" selected>24 Stunden</option>
+                <option value="168">7 Tage</option>
+                <option value="720">30 Tage</option>
+            </select>
+        </div>
         <div class="chart-container">
             <canvas id="humidityChart"></canvas>
         </div>
-        <button class="info-btn">ℹ️ Optimale Werte anzeigen</button>
-        <div class="info-box">
-            <p><strong>Optimalbereich für Cannabis:</strong></p>
+        <div class="info-container">
+            <h3>Optimale Luftfeuchtigkeit</h3>
             <ul>
-                <li>Keimling: 65-70%</li>
-                <li>Wachstum: 40-70%</li>
-                <li>Blüte: 40-50% (um Schimmel vorzubeugen)</li>
+                <li><strong>Keimling:</strong> 65-70%</li>
+                <li><strong>Wachstum:</strong> 40-70%</li>
+                <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
             </ul>
         </div>
     </div>
     
     <!-- VPD Card -->
     <div class="card">
-        <h2>VPD (kPa)</h2>
+        <div class="chart-header">
+            <h2>VPD (kPa)</h2>
+            <select class="time-select">
+                <option value="1">1 Stunde</option>
+                <option value="6">6 Stunden</option>
+                <option value="24" selected>24 Stunden</option>
+                <option value="168">7 Tage</option>
+                <option value="720">30 Tage</option>
+            </select>
+        </div>
         <div class="chart-container">
             <canvas id="vpdChart"></canvas>
         </div>
-        <div id="currentVpd" class="vpd-value"></div>
-        <button class="info-btn">ℹ️ VPD-Informationen</button>
-        <div class="info-box">
-            <p><strong>Vapor Pressure Deficit (Dampfdruckdefizit):</strong></p>
-            <p>Optimaler VPD-Bereich für Cannabis:</p>
+        <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
+        <div class="info-container">
+            <h3>VPD (Dampfdruckdefizit)</h3>
+            <p><strong>Optimalbereiche:</strong></p>
             <ul>
-                <li>Keimling: 0.4-0.8 kPa</li>
-                <li>Wachstum: 0.8-1.2 kPa</li>
-                <li>Blüte: 1.0-1.5 kPa</li>
+                <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
+                <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
+                <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
             </ul>
             
+            <h4>VPD-Referenztabelle</h4>
             <table class="vpd-table">
                 <thead>
                     <tr>
@@ -372,7 +371,7 @@
         }
         
         // Daten laden
-        async function loadData(hours) {
+        async function loadData(chart, hours) {
             try {
                 const response = await fetch(
                     `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours*6}`
@@ -394,10 +393,13 @@
                 
                 // Zeitachse anpassen
                 const timeUnit = hours >= 24 ? 'day' : 'hour';
-                [tempChart, humidityChart, vpdChart].forEach(chart => {
-                    chart.options.scales.x.time.unit = timeUnit;
-                    chart.update();
-                });
+                tempChart.options.scales.x.time.unit = timeUnit;
+                humidityChart.options.scales.x.time.unit = timeUnit;
+                vpdChart.options.scales.x.time.unit = timeUnit;
+                
+                tempChart.update();
+                humidityChart.update();
+                vpdChart.update();
                 
                 // Aktuellen VPD-Wert anzeigen
                 if (feeds.length > 0) {
@@ -420,28 +422,23 @@
             }
         }
         
-        // Event-Listener für Buttons
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Aktiven Button markieren
-                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        // Event-Listener für Dropdowns
+        document.querySelectorAll('.time-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const hours = parseInt(this.value);
+                const chartId = this.closest('.card').querySelector('canvas').id;
                 
-                // Stunden berechnen (1h, 6h, 24h, 7d)
-                const text = btn.textContent;
-                const hours = text.includes('d') ? 
-                    parseInt(text) * 24 : 
-                    parseInt(text);
-                
-                loadData(hours);
-            });
-        });
-        
-        // Info-Buttons
-        document.querySelectorAll('.info-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const infoBox = btn.nextElementSibling;
-                infoBox.style.display = infoBox.style.display === 'block' ? 'none' : 'block';
+                switch(chartId) {
+                    case 'tempChart':
+                        loadData(tempChart, hours);
+                        break;
+                    case 'humidityChart':
+                        loadData(humidityChart, hours);
+                        break;
+                    case 'vpdChart':
+                        loadData(vpdChart, hours);
+                        break;
+                }
             });
         });
         
@@ -461,7 +458,9 @@
         
         // Initialisierung
         initCharts();
-        document.querySelector('.time-btn.active').click();
+        document.querySelectorAll('.time-select').forEach(select => {
+            select.dispatchEvent(new Event('change'));
+        });
     });
     </script>
 </body>
