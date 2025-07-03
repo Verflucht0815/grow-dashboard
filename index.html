@@ -8,171 +8,203 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
     <style>
         :root {
-            --bg-color: #f5f5f5;
-            --text-color: #333;
-            --card-bg: white;
-            --btn-bg: #4CAF50;
-            --btn-text: white;
-            --vpd-optimal: #4CAF50;
-            --vpd-high: #FF9800;
-            --vpd-low: #2196F3;
-            --dropdown-bg: white;
-            --dropdown-border: #ddd;
-            --nav-bg: #f0f0f0;
+            --bg-color: #f2f3f5;
+            --text-color: #1e1e1e;
+            --card-bg: #ffffff;
+            --btn-bg: #1f2937;
+            --btn-hover-bg: #374151;
+            --btn-text: #ffffff;
+            --vpd-optimal: #16a34a;
+            --vpd-high: #eab308;
+            --vpd-low: #0ea5e9;
+            --dropdown-bg: #ffffff;
+            --dropdown-border: #cbd5e1;
+            --nav-bg: #e5e7eb;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        
+
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #121212;
-                --text-color: #f5f5f5;
-                --card-bg: #1e1e1e;
-                --btn-bg: #2E7D32;
-                --dropdown-bg: #2d2d2d;
-                --dropdown-border: #444;
-                --nav-bg: #252525;
+                --bg-color: #111827;
+                --text-color: #e5e7eb;
+                --card-bg: #1f2937;
+                --btn-bg: #374151;
+                --btn-hover-bg: #4b5563;
+                --btn-text: #ffffff;
+                --dropdown-bg: #1e293b;
+                --dropdown-border: #334155;
+                --nav-bg: #1a1f2b;
+                --shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
             }
         }
-        
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 0;
             margin: 0;
-            max-width: 100%;
-            overflow-x: hidden;
+            padding: 0;
         }
-        
+
         .nav-menu {
             background-color: var(--nav-bg);
-            padding: 10px;
+            padding: 12px 20px;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             border-bottom: 1px solid var(--dropdown-border);
+            box-shadow: var(--shadow);
         }
-        
+
         .nav-btn {
             background-color: var(--btn-bg);
             color: var(--btn-text);
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 10px 18px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s, transform 0.2s;
+            opacity: 0.85;
         }
-        
+
+        .nav-btn:hover {
+            background-color: var(--btn-hover-bg);
+            transform: scale(1.02);
+            opacity: 1;
+        }
+
         .module {
             display: none;
-            padding: 15px;
+            padding: 24px;
         }
-        
+
         .module.active {
             display: block;
         }
-        
+
         .card {
             background-color: var(--card-bg);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
         }
-        
+
         .chart-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 18px;
         }
-        
+
         select {
             background-color: var(--dropdown-bg);
             color: var(--text-color);
             border: 1px solid var(--dropdown-border);
-            border-radius: 4px;
-            padding: 5px 10px;
+            border-radius: 5px;
+            padding: 6px 12px;
             font-size: 14px;
+            transition: border-color 0.3s;
         }
-        
+
+        select:focus {
+            border-color: var(--btn-bg);
+            outline: none;
+        }
+
         .chart-container {
             position: relative;
             width: 100%;
-            min-height: 250px;
+            min-height: 280px;
             margin-bottom: 10px;
         }
-        
+
         .info-dropdown {
-            margin-top: 15px;
+            margin-top: 18px;
         }
-        
+
         .info-btn {
             background-color: var(--btn-bg);
             color: var(--btn-text);
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
             text-align: left;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 500;
+            transition: background 0.3s;
         }
-        
+
+        .info-btn:hover {
+            background-color: var(--btn-hover-bg);
+        }
+
         .info-btn::after {
             content: "▼";
             font-size: 12px;
             transition: transform 0.3s;
         }
-        
+
         .info-btn.active::after {
             transform: rotate(180deg);
         }
-        
+
         .info-content {
             display: none;
-            padding: 10px;
+            padding: 14px;
             background-color: var(--card-bg);
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 0 6px 6px;
             border: 1px solid var(--dropdown-border);
             border-top: none;
+            margin-top: -1px;
         }
-        
+
         .vpd-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 14px;
         }
-        
-        .vpd-table th, .vpd-table td {
+
+        .vpd-table th,
+        .vpd-table td {
             border: 1px solid var(--text-color);
-            padding: 6px;
+            padding: 8px;
             text-align: center;
         }
-        
+
         .vpd-table th {
             background-color: var(--btn-bg);
             color: var(--btn-text);
         }
-        
+
         .vpd-value {
-            font-weight: bold;
-            padding: 8px;
-            border-radius: 4px;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 6px;
             text-align: center;
-            margin: 10px 0;
+            margin: 16px 0;
             background-color: var(--btn-bg);
-            color: white;
+            color: var(--btn-text);
+            font-size: 16px;
         }
-        
+
         @media (min-width: 768px) {
             .chart-container {
                 min-height: 350px;
             }
-            
+
             .card {
-                padding: 20px;
+                padding: 24px 28px;
+            }
+
+            .nav-menu {
+                justify-content: flex-start;
             }
         }
     </style>
