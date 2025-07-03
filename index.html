@@ -30,7 +30,7 @@
             <div class="card">
                 <div class="chart-header">
                     <h2>Temperatur (°C)</h2>
-                    <select class="time-select">
+                    <select class="time-select" data-chart="tempChart">
                         <option value="1">1 Stunde</option>
                         <option value="6">6 Stunden</option>
                         <option value="24" selected>24 Stunden</option>
@@ -59,7 +59,7 @@
             <div class="card">
                 <div class="chart-header">
                     <h2>Luftfeuchtigkeit (%)</h2>
-                    <select class="time-select">
+                    <select class="time-select" data-chart="humidityChart">
                         <option value="1">1 Stunde</option>
                         <option value="6">6 Stunden</option>
                         <option value="24" selected>24 Stunden</option>
@@ -88,7 +88,7 @@
             <div class="card">
                 <div class="chart-header">
                     <h2>VPD (kPa)</h2>
-                    <select class="time-select">
+                    <select class="time-select" data-chart="vpdChart">
                         <option value="1">1 Stunde</option>
                         <option value="6">6 Stunden</option>
                         <option value="24" selected>24 Stunden</option>
@@ -138,9 +138,33 @@
     <div id="control" class="module">
         <div class="card">
             <h2>Steuerung</h2>
-            <button class="main-btn">💡 Licht An/Aus</button>
-            <button class="main-btn">💧 Wasserpumpe</button>
-            <button class="main-btn">🌫️ Luftbefeuchter</button>
+            <div class="control-row">
+                <label for="lightSwitch">💡 Licht An/Aus</label>
+                <label class="switch">
+                    <input type="checkbox" id="lightSwitch" />
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="control-row">
+                <label for="lightDimmer">Dimmer (%)</label>
+                <input type="range" id="lightDimmer" min="0" max="100" value="50" />
+                <span id="dimmerValue">50%</span>
+            </div>
+
+            <div class="control-row watt-display">
+                <div>
+                    <strong>Verbrauchte Watt:</strong>
+                </div>
+                <div id="wattGauge" class="gauge">0 W</div>
+            </div>
+
+            <div class="control-row">
+                <button class="main-btn">💧 Wasserpumpe An/Aus</button>
+            </div>
+            <div class="control-row">
+                <button class="main-btn">🌫️ Luftbefeuchter An/Aus</button>
+            </div>
         </div>
     </div>
 
@@ -148,43 +172,13 @@
     <div id="guide" class="module">
         <div class="card">
             <h2>Anleitung</h2>
-            <div class="guide-nav">
-                <button class="guide-btn" data-guide="erde">Erde</button>
-                <button class="guide-btn" data-guide="wasser">Wasser</button>
-                <button class="guide-btn" data-guide="duenger">Dünger</button>
-                <button class="guide-btn" data-guide="ph">pH-Wert</button>
-                <button class="guide-btn" data-guide="ecppm">EC / PPM</button>
-                <button class="guide-btn" data-guide="licht">Licht Theorie</button>
-                <button class="guide-btn" data-guide="training">Trainingsmethoden</button>
-            </div>
-
-            <div id="erde" class="guide-section card">
-                <h3>Erde</h3>
-                <p>Wähle eine lockere, nährstoffreiche Erde mit gutem Wasserabfluss.</p>
-            </div>
-            <div id="wasser" class="guide-section card">
-                <h3>Wasser</h3>
-                <p>Regelmäßige Bewässerung mit abgestandenem Wasser. Staunässe vermeiden.</p>
-            </div>
-            <div id="duenger" class="guide-section card">
-                <h3>Dünger</h3>
-                <p>Organisch oder mineralisch, je nach Phase. Dosierung beachten.</p>
-            </div>
-            <div id="ph" class="guide-section card">
-                <h3>pH-Wert</h3>
-                <p>Ideal zwischen 5.8 und 6.5. Regelmäßig mit Teststreifen kontrollieren.</p>
-            </div>
-            <div id="ecppm" class="guide-section card">
-                <h3>EC / PPM</h3>
-                <p>Elektrische Leitfähigkeit misst die Nährstoffkonzentration.</p>
-            </div>
-            <div id="licht" class="guide-section card">
-                <h3>Licht Theorie</h3>
-                <p>PAR, Lumen, DLI verstehen. Optimale Beleuchtung mit LED oder NDL.</p>
-            </div>
-            <div id="training" class="guide-section card">
-                <h3>Trainingsmethoden</h3>
-                <p>LST, Topping, Scrogging u.v.m. für besseren Ertrag und Kontrolle.</p>
+            <div class="guide-nav"></div>
+            <div id="guideContent" class="guide-section card"></div>
+            <button id="editGuideBtn" class="main-btn">✏️ Anleitung bearbeiten</button>
+            <div id="editArea" style="display:none; margin-top:12px;">
+                <textarea id="guideEditor" rows="10" style="width:100%; font-family: monospace;"></textarea>
+                <button id="saveGuideBtn" class="main-btn" style="margin-top:8px;">Speichern</button>
+                <button id="cancelEditBtn" class="main-btn" style="margin-top:8px; background-color:#aaa;">Abbrechen</button>
             </div>
         </div>
     </div>
