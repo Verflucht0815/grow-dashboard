@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GrowController</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .time-btn { background: #4CAF50; color: white; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; }
+        canvas { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🌱 GrowController</h1>
+    <div>
+        <button class="time-btn" onclick="loadData(1)">1h</button>
+        <button class="time-btn" onclick="loadData(24)">24h</button>
+        <button class="time-btn" onclick="loadData(168)">7 Tage</button>
+    </div>
+    <canvas id="myChart"></canvas>
+
+    <script>
+        // CONFIG HIER ANPASSEN!
+        const CHANNEL_ID = 2999714;      // Deine ThingSpeak Channel ID
+        const READ_API_KEY = '95YOHGB903ET32DX'; // Dein Read API Key
+        
+        let chart;
+        
+        function initChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets: [
+                    { label: "Temperatur (°C)", borderColor: '#FF6384', yAxisID: 'y' },
+                    { label: "Luftfeuchtigkeit (%)", borderColor: '#36A2EB', yAxisID: 'y1' }
+                ]},
+                options: {
+                    scales: {
+                        x: { type: 'time', time: { tooltipFormat: 'DD.MM HH:mm' } },
+                        y: { title: { display: true, text: 'Temperatur (°C)' }},
+                        y1: { position: 'right', title: { display: true, text: 'Luftfeuchtigkeit (%)' }}
+                    }
+                }
+            });
+        }
+        
+        function loadData(hours) {
+            fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours*6}`)
+                .then(response => response.json())
+                .then(data => {
+                    chart.data.datasets[0].data = data.feeds.map(f => ({ x: f.created_at, y: f.field1 }));
+                    chart.data.datasets[1].data = data.feeds.map(f => ({ x: f.created_at, y: f.field2 }));
+                    chart.update();
+                });
+        }
+        
+        window.onload = () => {
+            initChart();
+            loadData(24); // Starte mit 24h-Daten
+        };
+    </script>
+</body>
+</html>
