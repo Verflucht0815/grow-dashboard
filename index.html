@@ -1,3 +1,4 @@
+<!-- ⚠️ Dieser Code ist sehr lang – bei Bedarf aufteilen in eigene .js/.css Dateien -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,32 +9,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
     <style>
         :root {
-            --bg-color: #f2f3f5;
-            --text-color: #1e1e1e;
+            --bg-color: #f3f6f3;
+            --text-color: #1c1f1a;
             --card-bg: #ffffff;
-            --btn-bg: #1f2937;
-            --btn-hover-bg: #374151;
+            --btn-bg: #2f6b3e;
+            --btn-hover-bg: #3e8c4d;
             --btn-text: #ffffff;
-            --vpd-optimal: #16a34a;
-            --vpd-high: #eab308;
-            --vpd-low: #0ea5e9;
+            --vpd-optimal: #4caf50;
+            --vpd-high: #ffc107;
+            --vpd-low: #2196f3;
             --dropdown-bg: #ffffff;
-            --dropdown-border: #cbd5e1;
-            --nav-bg: #e5e7eb;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --dropdown-border: #cfd8dc;
+            --nav-bg: #d9eadd;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #111827;
-                --text-color: #e5e7eb;
-                --card-bg: #1f2937;
-                --btn-bg: #374151;
-                --btn-hover-bg: #4b5563;
+                --bg-color: #0f1b13;
+                --text-color: #e8f5e9;
+                --card-bg: #1a2b20;
+                --btn-bg: #3e8c4d;
+                --btn-hover-bg: #50a75e;
                 --btn-text: #ffffff;
-                --dropdown-bg: #1e293b;
-                --dropdown-border: #334155;
-                --nav-bg: #1a1f2b;
+                --dropdown-bg: #243527;
+                --dropdown-border: #4a5f4c;
+                --nav-bg: #16251c;
                 --shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
             }
         }
@@ -46,11 +47,38 @@
             padding: 0;
         }
 
-        .nav-menu {
+        .main-nav {
+            background-color: var(--nav-bg);
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--dropdown-border);
+            box-shadow: var(--shadow);
+        }
+
+        .main-btn {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 12px 20px;
+            margin: 0 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s, transform 0.2s;
+            opacity: 0.9;
+        }
+
+        .main-btn:hover {
+            background-color: var(--btn-hover-bg);
+            transform: scale(1.05);
+            opacity: 1;
+        }
+
+        .sub-nav {
             background-color: var(--nav-bg);
             padding: 12px 20px;
             display: flex;
-            flex-wrap: wrap;
             gap: 12px;
             border-bottom: 1px solid var(--dropdown-border);
             box-shadow: var(--shadow);
@@ -60,26 +88,23 @@
             background-color: var(--btn-bg);
             color: var(--btn-text);
             border: none;
-            padding: 10px 18px;
+            padding: 10px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
-            transition: background 0.3s, transform 0.2s;
-            opacity: 0.85;
+            transition: background 0.3s;
         }
 
         .nav-btn:hover {
             background-color: var(--btn-hover-bg);
-            transform: scale(1.02);
-            opacity: 1;
         }
 
-        .module {
+        .module, .sub-module, .guide-section {
             display: none;
             padding: 24px;
         }
 
-        .module.active {
+        .module.active, .sub-module.active, .guide-section.active {
             display: block;
         }
 
@@ -91,11 +116,35 @@
             box-shadow: var(--shadow);
         }
 
-        .chart-header {
+        h2, h3 {
+            margin-top: 0;
+        }
+
+        .guide-nav {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .guide-btn {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .guide-btn:hover {
+            background-color: var(--btn-hover-bg);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
         }
 
         select {
@@ -105,82 +154,6 @@
             border-radius: 5px;
             padding: 6px 12px;
             font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        select:focus {
-            border-color: var(--btn-bg);
-            outline: none;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            min-height: 280px;
-            margin-bottom: 10px;
-        }
-
-        .info-dropdown {
-            margin-top: 18px;
-        }
-
-        .info-btn {
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
-            transition: background 0.3s;
-        }
-
-        .info-btn:hover {
-            background-color: var(--btn-hover-bg);
-        }
-
-        .info-btn::after {
-            content: "▼";
-            font-size: 12px;
-            transition: transform 0.3s;
-        }
-
-        .info-btn.active::after {
-            transform: rotate(180deg);
-        }
-
-        .info-content {
-            display: none;
-            padding: 14px;
-            background-color: var(--card-bg);
-            border-radius: 0 0 6px 6px;
-            border: 1px solid var(--dropdown-border);
-            border-top: none;
-            margin-top: -1px;
-        }
-
-        .vpd-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 14px;
-        }
-
-        .vpd-table th,
-        .vpd-table td {
-            border: 1px solid var(--text-color);
-            padding: 8px;
-            text-align: center;
-        }
-
-        .vpd-table th {
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
         }
 
         .vpd-value {
@@ -193,395 +166,195 @@
             color: var(--btn-text);
             font-size: 16px;
         }
-
-        @media (min-width: 768px) {
-            .chart-container {
-                min-height: 350px;
-            }
-
-            .card {
-                padding: 24px 28px;
-            }
-
-            .nav-menu {
-                justify-content: flex-start;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="nav-menu">
-        <button class="nav-btn" data-module="temp">Temperatur</button>
-        <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
-        <button class="nav-btn" data-module="vpd">VPD</button>
+    <div class="main-nav">
+        <button class="main-btn" data-main="climate">Klima</button>
+        <button class="main-btn" data-main="control">Steuerung</button>
+        <button class="main-btn" data-main="guide">Anleitung</button>
     </div>
-    
-    <!-- Temperatur Modul -->
-    <div id="temp-module" class="module">
-        <div class="card">
-            <div class="chart-header">
+
+    <!-- Klima-Modul -->
+    <div id="climate" class="module active">
+        <div class="sub-nav">
+            <button class="nav-btn" data-sub="temp">Temperatur</button>
+            <button class="nav-btn" data-sub="humidity">Luftfeuchtigkeit</button>
+            <button class="nav-btn" data-sub="vpd">VPD</button>
+        </div>
+
+        <div id="temp" class="sub-module active">
+            <div class="card">
                 <h2>Temperatur (°C)</h2>
-                <select class="time-select">
-                    <option value="1">1 Stunde</option>
-                    <option value="6">6 Stunden</option>
-                    <option value="24" selected>24 Stunden</option>
-                    <option value="168">7 Tage</option>
-                    <option value="720">30 Tage</option>
+                <select class="time-select" data-target="temp"> 
+                    <option value="1">1h</option>
+                    <option value="6">6h</option>
+                    <option value="24" selected>24h</option>
+                    <option value="168">7d</option>
                 </select>
-            </div>
-            <div class="chart-container">
-                <canvas id="tempChart"></canvas>
-            </div>
-            <div class="info-dropdown">
-                <button class="info-btn">ℹ️ Optimale Temperaturwerte</button>
-                <div class="info-content">
-                    <ul>
-                        <li><strong>Keimling:</strong> 20-25°C</li>
-                        <li><strong>Wachstum:</strong> 22-28°C (Tag), 18-22°C (Nacht)</li>
-                        <li><strong>Blüte:</strong> 20-26°C (Tag), 18-21°C (Nacht)</li>
-                    </ul>
-                </div>
+                <div class="chart-container"><canvas id="tempChart"></canvas></div>
             </div>
         </div>
-    </div>
-    
-    <!-- Luftfeuchtigkeit Modul -->
-    <div id="humidity-module" class="module">
-        <div class="card">
-            <div class="chart-header">
+
+        <div id="humidity" class="sub-module">
+            <div class="card">
                 <h2>Luftfeuchtigkeit (%)</h2>
-                <select class="time-select">
-                    <option value="1">1 Stunde</option>
-                    <option value="6">6 Stunden</option>
-                    <option value="24" selected>24 Stunden</option>
-                    <option value="168">7 Tage</option>
-                    <option value="720">30 Tage</option>
+                <select class="time-select" data-target="humidity"> 
+                    <option value="1">1h</option>
+                    <option value="6">6h</option>
+                    <option value="24" selected>24h</option>
+                    <option value="168">7d</option>
                 </select>
+                <div class="chart-container"><canvas id="humidityChart"></canvas></div>
             </div>
-            <div class="chart-container">
-                <canvas id="humidityChart"></canvas>
-            </div>
-            <div class="info-dropdown">
-                <button class="info-btn">ℹ️ Optimale Luftfeuchtigkeit</button>
-                <div class="info-content">
-                    <ul>
-                        <li><strong>Keimling:</strong> 65-70%</li>
-                        <li><strong>Wachstum:</strong> 40-70%</li>
-                        <li><strong>Blüte:</strong> 40-50% (Schimmelprävention)</li>
-                    </ul>
-                </div>
+        </div>
+
+        <div id="vpd" class="sub-module">
+            <div class="card">
+                <h2>VPD (kPa)</h2>
+                <select class="time-select" data-target="vpd"> 
+                    <option value="1">1h</option>
+                    <option value="6">6h</option>
+                    <option value="24" selected>24h</option>
+                    <option value="168">7d</option>
+                </select>
+                <div class="chart-container"><canvas id="vpdChart"></canvas></div>
+                <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
             </div>
         </div>
     </div>
-    
-    <!-- VPD Modul -->
-    <div id="vpd-module" class="module">
+
+    <!-- Steuerung -->
+    <div id="control" class="module">
         <div class="card">
-            <div class="chart-header">
-                <h2>VPD (kPa)</h2>
-                <select class="time-select">
-                    <option value="1">1 Stunde</option>
-                    <option value="6">6 Stunden</option>
-                    <option value="24" selected>24 Stunden</option>
-                    <option value="168">7 Tage</option>
-                    <option value="720">30 Tage</option>
-                </select>
+            <h2>Steuerung</h2>
+            <button class="main-btn">💡 Licht An/Aus</button>
+            <button class="main-btn">💧 Wasserpumpe</button>
+            <button class="main-btn">🌫️ Luftbefeuchter</button>
+        </div>
+    </div>
+
+    <!-- Anleitung -->
+    <div id="guide" class="module">
+        <div class="card">
+            <h2>Anleitung</h2>
+            <div class="guide-nav">
+                <button class="guide-btn" data-guide="erde">Erde</button>
+                <button class="guide-btn" data-guide="wasser">Wasser</button>
+                <button class="guide-btn" data-guide="duenger">Dünger</button>
+                <button class="guide-btn" data-guide="ph">pH-Wert</button>
+                <button class="guide-btn" data-guide="ecppm">EC / PPM</button>
+                <button class="guide-btn" data-guide="licht">Licht Theorie</button>
+                <button class="guide-btn" data-guide="training">Training</button>
             </div>
-            <div class="chart-container">
-                <canvas id="vpdChart"></canvas>
-            </div>
-            <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
-            <div class="info-dropdown">
-                <button class="info-btn">ℹ️ VPD-Informationen</button>
-                <div class="info-content">
-                    <p><strong>Optimalbereiche:</strong></p>
-                    <ul>
-                        <li><strong>Keimling:</strong> 0.4-0.8 kPa</li>
-                        <li><strong>Wachstum:</strong> 0.8-1.2 kPa</li>
-                        <li><strong>Blüte:</strong> 1.0-1.5 kPa</li>
-                    </ul>
-                    
-                    <h4>VPD-Referenztabelle</h4>
-                    <table class="vpd-table">
-                        <thead>
-                            <tr>
-                                <th>Temp (°C)</th>
-                                <th>40% RH</th>
-                                <th>50% RH</th>
-                                <th>60% RH</th>
-                                <th>70% RH</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>20</td>
-                                <td>0.93</td>
-                                <td>0.70</td>
-                                <td>0.47</td>
-                                <td>0.23</td>
-                            </tr>
-                            <tr>
-                                <td>22</td>
-                                <td>1.05</td>
-                                <td>0.81</td>
-                                <td>0.57</td>
-                                <td>0.33</td>
-                            </tr>
-                            <tr>
-                                <td>24</td>
-                                <td>1.19</td>
-                                <td>0.93</td>
-                                <td>0.68</td>
-                                <td>0.42</td>
-                            </tr>
-                            <tr>
-                                <td>26</td>
-                                <td>1.34</td>
-                                <td>1.07</td>
-                                <td>0.80</td>
-                                <td>0.53</td>
-                            </tr>
-                            <tr>
-                                <td>28</td>
-                                <td>1.51</td>
-                                <td>1.23</td>
-                                <td>0.94</td>
-                                <td>0.65</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <div id="erde" class="guide-section card active"><h3>Erde</h3><p>Lockere, nährstoffreiche Erde wählen.</p></div>
+            <div id="wasser" class="guide-section card"><h3>Wasser</h3><p>Abgestanden, nicht zu kalt. Staunässe vermeiden.</p></div>
+            <div id="duenger" class="guide-section card"><h3>Dünger</h3><p>An Wachstumsphase angepasst dosieren.</p></div>
+            <div id="ph" class="guide-section card"><h3>pH-Wert</h3><p>Optimal: 5.8–6.5. Kontrollieren & anpassen.</p></div>
+            <div id="ecppm" class="guide-section card"><h3>EC / PPM</h3><p>Misst Nährstoffkonzentration im Gießwasser.</p></div>
+            <div id="licht" class="guide-section card"><h3>Licht Theorie</h3><p>DLI, Lumen, PAR verstehen. LED empfohlen.</p></div>
+            <div id="training" class="guide-section card"><h3>Training</h3><p>LST, Topping, ScrOG für Ertragskontrolle.</p></div>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Konfiguration
-        const CHANNEL_ID = 2999714;
-        const READ_API_KEY = '95YOHGB903ET32DX';
-        let tempChart, humidityChart, vpdChart;
-        
-        // VPD Berechnung (in kPa)
-        function calculateVPD(temp, humidity) {
-            if (!temp || !humidity) return null;
-            
-            // Sättigungsdampfdruck (Tetens-Formel)
-            const svp = 0.61078 * Math.exp((17.27 * temp) / (temp + 237.3));
-            
-            // Tatsächlicher Dampfdruck
-            const vp = svp * (humidity / 100);
-            
-            // VPD in kPa
-            return (svp - vp).toFixed(2);
-        }
-        
-        // Farben für Dark/Light Mode
-        const getChartColors = () => {
-            return {
-                textColor: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
-                gridColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? 
-                          'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                tempColor: '#FF6384',
-                humidityColor: '#36A2EB',
-                vpdColor: '#9C27B0'
-            };
+    const CHANNEL_ID = 2999714;
+    const READ_API_KEY = '95YOHGB903ET32DX';
+    let tempChart, humidityChart, vpdChart;
+
+    function calculateVPD(temp, humidity) {
+        const svp = 0.61078 * Math.exp((17.27 * temp) / (temp + 237.3));
+        const vp = svp * (humidity / 100);
+        return (svp - vp).toFixed(2);
+    }
+
+    function getChartColors() {
+        return {
+            textColor: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+            gridColor: window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            tempColor: '#FF6384',
+            humidityColor: '#36A2EB',
+            vpdColor: '#9C27B0'
         };
-        
-        // Diagramme initialisieren
-        function initCharts() {
-            const colors = getChartColors();
-            
-            // Temperatur-Chart
-            tempChart = new Chart(
-                document.getElementById('tempChart').getContext('2d'), 
-                getChartConfig('Temperatur', '°C', colors.tempColor, colors)
-            );
-            
-            // Luftfeuchtigkeits-Chart
-            humidityChart = new Chart(
-                document.getElementById('humidityChart').getContext('2d'), 
-                getChartConfig('Luftfeuchtigkeit', '%', colors.humidityColor, colors)
-            );
-            
-            // VPD-Chart
-            vpdChart = new Chart(
-                document.getElementById('vpdChart').getContext('2d'), 
-                getChartConfig('VPD', 'kPa', colors.vpdColor, colors)
-            );
-        }
-        
-        // Gemeinsame Chart-Konfiguration
-        function getChartConfig(label, unit, color, colors) {
-            return {
-                type: 'line',
-                data: { 
-                    datasets: [{ 
-                        label: label, 
-                        borderColor: color,
-                        backgroundColor: color + '20',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.1,
-                        data: [] 
-                    }]
+    }
+
+    function getChartConfig(label, unit, color, colors) {
+        return {
+            type: 'line',
+            data: { datasets: [{ label, borderColor: color, backgroundColor: color + '20', data: [] }] },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'time', time: { unit: 'hour' }, grid: { color: colors.gridColor }, ticks: { color: colors.textColor } },
+                    y: { title: { display: true, text: unit, color: colors.textColor }, grid: { color: colors.gridColor }, ticks: { color: colors.textColor } }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { 
-                            type: 'time',
-                            time: {
-                                tooltipFormat: 'DD.MM HH:mm',
-                                unit: 'hour'
-                            },
-                            grid: { color: colors.gridColor },
-                            ticks: { color: colors.textColor }
-                        },
-                        y: { 
-                            title: { 
-                                display: true, 
-                                text: unit,
-                                color: colors.textColor
-                            },
-                            grid: { color: colors.gridColor },
-                            ticks: { color: colors.textColor }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
-                    }
-                }
-            };
-        }
-        
-        // Daten laden
-        async function loadData(chart, hours) {
-            try {
-                const response = await fetch(
-                    `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours*6}`
-                );
-                const data = await response.json();
-                
-                // Daten aufbereiten
-                const feeds = data.feeds.map(f => ({
-                    x: f.created_at,
-                    temp: parseFloat(f.field1),
-                    humidity: parseFloat(f.field2),
-                    vpd: calculateVPD(parseFloat(f.field1), parseFloat(f.field2))
-                })).filter(f => !isNaN(f.temp) && !isNaN(f.humidity));
-                
-                // Chart aktualisieren
-                if (chart === tempChart) {
-                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.temp }));
-                } else if (chart === humidityChart) {
-                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.humidity }));
-                } else if (chart === vpdChart) {
-                    chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.vpd }));
-                    
-                    // Aktuellen VPD-Wert anzeigen
-                    if (feeds.length > 0) {
-                        const lastVpd = feeds[feeds.length-1].vpd;
-                        const vpdElement = document.getElementById('currentVpd');
-                        vpdElement.textContent = `Aktueller VPD: ${lastVpd} kPa`;
-                        
-                        // Farbe nach VPD-Bereich
-                        if (lastVpd < 0.8) {
-                            vpdElement.style.background = 'var(--vpd-low)';
-                        } else if (lastVpd > 1.2) {
-                            vpdElement.style.background = 'var(--vpd-high)';
-                        } else {
-                            vpdElement.style.background = 'var(--vpd-optimal)';
-                        }
-                    }
-                }
-                
-                // Zeitachse anpassen
-                const timeUnit = hours >= 24 ? 'day' : 'hour';
-                chart.options.scales.x.time.unit = timeUnit;
-                chart.update();
-                
-            } catch (error) {
-                console.error("Fehler:", error);
+                plugins: { legend: { display: false } }
             }
+        };
+    }
+
+    async function loadData(chart, hours, field) {
+        const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=${hours * 6}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const feeds = data.feeds.map(f => ({
+            x: f.created_at,
+            temp: parseFloat(f.field1),
+            humidity: parseFloat(f.field2),
+            vpd: calculateVPD(parseFloat(f.field1), parseFloat(f.field2))
+        })).filter(f => !isNaN(f.temp) && !isNaN(f.humidity));
+
+        if (chart === tempChart) chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.temp }));
+        if (chart === humidityChart) chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.humidity }));
+        if (chart === vpdChart) {
+            chart.data.datasets[0].data = feeds.map(f => ({ x: f.x, y: f.vpd }));
+            const vpd = feeds.at(-1)?.vpd || "--";
+            const el = document.getElementById("currentVpd");
+            el.textContent = `Aktueller VPD: ${vpd} kPa`;
+            el.style.background = vpd < 0.8 ? "var(--vpd-low)" : (vpd > 1.2 ? "var(--vpd-high)" : "var(--vpd-optimal)");
         }
-        
-        // Event-Listener für Dropdowns
+
+        chart.options.scales.x.time.unit = hours >= 24 ? "day" : "hour";
+        chart.update();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const colors = getChartColors();
+        tempChart = new Chart(document.getElementById("tempChart").getContext("2d"), getChartConfig("Temperatur", "°C", colors.tempColor, colors));
+        humidityChart = new Chart(document.getElementById("humidityChart").getContext("2d"), getChartConfig("Luftfeuchtigkeit", "%", colors.humidityColor, colors));
+        vpdChart = new Chart(document.getElementById("vpdChart").getContext("2d"), getChartConfig("VPD", "kPa", colors.vpdColor, colors));
+
         document.querySelectorAll('.time-select').forEach(select => {
-            select.addEventListener('change', function() {
-                const hours = parseInt(this.value);
-                const chartId = this.closest('.card').querySelector('canvas').id;
-                
-                switch(chartId) {
-                    case 'tempChart':
-                        loadData(tempChart, hours);
-                        break;
-                    case 'humidityChart':
-                        loadData(humidityChart, hours);
-                        break;
-                    case 'vpdChart':
-                        loadData(vpdChart, hours);
-                        break;
-                }
+            select.addEventListener('change', function () {
+                const val = parseInt(this.value);
+                const target = this.dataset.target;
+                if (target === 'temp') loadData(tempChart, val);
+                if (target === 'humidity') loadData(humidityChart, val);
+                if (target === 'vpd') loadData(vpdChart, val);
             });
-        });
-        
-        // Event-Listener für Nav-Buttons
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const moduleId = this.dataset.module;
-                
-                // Alle Module verstecken
-                document.querySelectorAll('.module').forEach(mod => {
-                    mod.classList.remove('active');
-                });
-                
-                // Aktives Modul anzeigen
-                document.getElementById(`${moduleId}-module`).classList.add('active');
-                
-                // Nav-Buttons zurücksetzen
-                document.querySelectorAll('.nav-btn').forEach(b => {
-                    b.style.opacity = '0.7';
-                });
-                
-                // Aktiven Button markieren
-                this.style.opacity = '1';
-            });
-        });
-        
-        // Event-Listener für Info-Dropdowns
-        document.querySelectorAll('.info-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const content = this.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
-            });
-        });
-        
-        // Dark Mode Änderungen überwachen
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            const colors = getChartColors();
-            
-            [tempChart, humidityChart, vpdChart].forEach(chart => {
-                chart.options.scales.x.ticks.color = colors.textColor;
-                chart.options.scales.y.ticks.color = colors.textColor;
-                chart.options.scales.y.title.color = colors.textColor;
-                chart.options.scales.x.grid.color = colors.gridColor;
-                chart.options.scales.y.grid.color = colors.gridColor;
-                chart.update();
-            });
-        });
-        
-        // Initialisierung
-        initCharts();
-        document.querySelector('.nav-btn[data-module="temp"]').click();
-        document.querySelectorAll('.time-select').forEach(select => {
             select.dispatchEvent(new Event('change'));
+        });
+
+        document.querySelectorAll('.main-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+                document.getElementById(btn.dataset.main).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sub-module').forEach(m => m.classList.remove('active'));
+                document.getElementById(btn.dataset.sub).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.guide-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.guide-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(btn.dataset.guide).classList.add('active');
+            });
         });
     });
     </script>
