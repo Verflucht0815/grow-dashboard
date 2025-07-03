@@ -1,154 +1,122 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <title>🌱 GrowController Pro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GrowController Anleitung</title>
+
+<style>
+  /* Basis Styles */
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f4f2;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #2f6b3e;
+    margin-bottom: 30px;
+  }
+
+  /* Container für Anleitung */
+  #guide-container {
+    max-width: 900px;
+    background: white;
+    margin: 0 auto;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.12);
+    line-height: 1.6;
+  }
+
+  /* Buttons Container */
+  .btn-container {
+    max-width: 900px;
+    margin: 0 auto 25px auto;
+    text-align: center;
+  }
+
+  button {
+    background-color: #2f6b3e;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    margin: 5px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #3e8c4d;
+  }
+
+  /* Typografie in Anleitung */
+  h2, h3 {
+    color: #2f6b3e;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+  }
+  p {
+    margin-bottom: 1em;
+  }
+  ul {
+    margin-left: 20px;
+    margin-bottom: 1em;
+  }
+  li {
+    margin-bottom: 0.4em;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    #guide-container {
+      padding: 20px 15px;
+      margin: 10px;
+    }
+    button {
+      width: 100%;
+      margin: 8px 0;
+    }
+  }
+</style>
+
 </head>
 <body>
-    <!-- Hauptmenü -->
-    <div class="main-nav">
-        <button class="main-btn" data-main="climate">Klima</button>
-        <button class="main-btn" data-main="control">Steuerung</button>
-        <button class="main-btn" data-main="guide">Anleitung</button>
-    </div>
 
-    <!-- Klima Modul -->
-    <div id="climate" class="module">
-        <div class="sub-nav">
-            <button class="nav-btn" data-module="temp">Temperatur</button>
-            <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
-            <button class="nav-btn" data-module="vpd">VPD</button>
-            <button class="nav-btn" data-module="soil">Bodenfeuchtigkeit</button>
-        </div>
+<h1>GrowController Anleitung</h1>
 
-        <!-- Temperatur Modul -->
-        <div id="temp-module" class="sub-module">
-            <div class="card">
-                <div class="chart-header">
-                    <h2>Temperatur (°C)</h2>
-                    <select class="time-select" data-chart="tempChart">
-                        <option value="1">1 Stunde</option>
-                        <option value="6">6 Stunden</option>
-                        <option value="24" selected>24 Stunden</option>
-                        <option value="168">7 Tage</option>
-                        <option value="720">30 Tage</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="tempChart"></canvas>
-                </div>
-            </div>
-        </div>
+<div class="btn-container">
+  <button onclick="loadGuide('ph.html')">pH-Wert Anleitung</button>
+  <button onclick="loadGuide('other.html')">Andere Anleitung</button>
+</div>
 
-        <!-- Luftfeuchtigkeit Modul -->
-        <div id="humidity-module" class="sub-module">
-            <div class="card">
-                <div class="chart-header">
-                    <h2>Luftfeuchtigkeit (%)</h2>
-                    <select class="time-select" data-chart="humidityChart">
-                        <option value="1">1 Stunde</option>
-                        <option value="6">6 Stunden</option>
-                        <option value="24" selected>24 Stunden</option>
-                        <option value="168">7 Tage</option>
-                        <option value="720">30 Tage</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="humidityChart"></canvas>
-                </div>
-            </div>
-        </div>
+<div id="guide-container">
+  <!-- Anleitung wird hier geladen -->
+  <p>Lade Anleitung...</p>
+</div>
 
-        <!-- VPD Modul -->
-        <div id="vpd-module" class="sub-module">
-            <div class="card">
-                <div class="chart-header">
-                    <h2>VPD (kPa)</h2>
-                    <select class="time-select" data-chart="vpdChart">
-                        <option value="1">1 Stunde</option>
-                        <option value="6">6 Stunden</option>
-                        <option value="24" selected>24 Stunden</option>
-                        <option value="168">7 Tage</option>
-                        <option value="720">30 Tage</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="vpdChart"></canvas>
-                </div>
-                <div id="currentVpd" class="vpd-value">Aktueller VPD: -- kPa</div>
-            </div>
-        </div>
+<script>
+  async function loadGuide(filename) {
+    const container = document.getElementById('guide-container');
+    try {
+      const response = await fetch(`guides/${filename}`);
+      if (!response.ok) throw new Error(`Fehler: ${response.status} ${response.statusText}`);
+      const content = await response.text();
+      container.innerHTML = content;
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll oben hin
+    } catch (err) {
+      container.innerHTML = `<p style="color:red;">Die Anleitung konnte nicht geladen werden: ${err.message}</p>`;
+    }
+  }
 
-        <!-- Bodenfeuchtigkeit Modul -->
-        <div id="soil-module" class="sub-module">
-            <div class="card">
-                <div class="chart-header">
-                    <h2>Bodenfeuchtigkeit (%)</h2>
-                    <select class="time-select" data-chart="soilChart">
-                        <option value="1">1 Stunde</option>
-                        <option value="6">6 Stunden</option>
-                        <option value="24" selected>24 Stunden</option>
-                        <option value="168">7 Tage</option>
-                        <option value="720">30 Tage</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="soilChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+  window.addEventListener('DOMContentLoaded', () => {
+    loadGuide('ph.html');
+  });
+</script>
 
-    <!-- Steuerung -->
-    <div id="control" class="module">
-        <div class="card">
-            <h2>Steuerung</h2>
-
-            <ul class="control-list">
-                <li>
-                    <label for="lightSwitch">💡 Licht An/Aus</label>
-                    <label class="switch">
-                        <input type="checkbox" id="lightSwitch" />
-                        <span class="slider round"></span>
-                    </label>
-                </li>
-
-                <li>
-                    <label for="lightDimmer">Dimmer (%)</label>
-                    <input type="range" id="lightDimmer" min="0" max="100" value="50" />
-                    <span id="dimmerValue">50%</span>
-                </li>
-
-                <li>
-                    <strong>Verbrauchte Watt:</strong>
-                    <div id="wattGauge" class="gauge">0 W</div>
-                </li>
-
-                <li>
-                    <button class="main-btn" id="waterPumpBtn">💧 Wasserpumpe An/Aus</button>
-                </li>
-
-                <li>
-                    <button class="main-btn" id="humidifierBtn">🌫️ Luftbefeuchter An/Aus</button>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Anleitung -->
-    <div id="guide" class="module">
-        <div class="card">
-            <h2>Anleitung</h2>
-            <div class="guide-nav"></div>
-            <div id="guideContent" class="guide-section card"></div>
-        </div>
-    </div>
-
-    <script src="js/script.js"></script>
 </body>
 </html>
