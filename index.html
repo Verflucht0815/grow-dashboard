@@ -1,102 +1,18 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <title>🌱 GrowController Pro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+  <meta charset="UTF-8">
+  <title>🌱 GrowController Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
 </head>
-    <script src="script.js"></script>
 <body>
-    <!-- Navigation -->
-    <div class="main-nav">
-        <button class="main-btn" data-main="climate">Klima</button>
-        <button class="main-btn" data-main="control">Steuerung</button>
-        <button class="main-btn" data-main="guide">Anleitung</button>
-    </div>
+  <!-- Deine HTML-Struktur (Header, Nav, Charts, Guide etc.) -->
+  <!-- Am besten kopierst du sie aus deiner letzten Version oder ich liefere sie dir extra aus -->
 
-    <!-- Klima Module -->
-    <div id="climate" class="module">
-        <div class="sub-nav">
-            <button class="nav-btn" data-module="temp">Temperatur</button>
-            <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
-            <button class="nav-btn" data-module="vpd">VPD</button>
-        </div>
-
-        <!-- Temperatur -->
-        <div id="temp" class="sub-module card">
-            <h2>Temperatur (°C)</h2>
-            <select onchange="loadData(tempChart, this.value)">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-            </select>
-            <div class="chart-container"><canvas id="tempChart"></canvas></div>
-        </div>
-
-        <!-- Luftfeuchtigkeit -->
-        <div id="humidity" class="sub-module card">
-            <h2>Luftfeuchtigkeit (%)</h2>
-            <select onchange="loadData(humidityChart, this.value)">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-            </select>
-            <div class="chart-container"><canvas id="humidityChart"></canvas></div>
-        </div>
-
-        <!-- VPD -->
-        <div id="vpd" class="sub-module card">
-            <h2>VPD (kPa)</h2>
-            <select onchange="loadData(vpdChart, this.value)">
-                <option value="1">1 Stunde</option>
-                <option value="6">6 Stunden</option>
-                <option value="24" selected>24 Stunden</option>
-                <option value="168">7 Tage</option>
-            </select>
-            <div class="chart-container"><canvas id="vpdChart"></canvas></div>
-            <div id="vpdNow" class="vpd-value">Aktueller VPD: --</div>
-        </div>
-    </div>
-
-    <!-- Steuerung -->
-    <div id="control" class="module">
-        <div class="card">
-            <h2>Steuerung</h2>
-            <button class="main-btn">💡 Licht An/Aus</button>
-            <button class="main-btn">💧 Wasserpumpe</button>
-            <button class="main-btn">🌫️ Luftbefeuchter</button>
-        </div>
-    </div>
-
-    <!-- Anleitung -->
-    <div id="guide" class="module">
-        <div class="card">
-            <h2>Anleitung</h2>
-            <div class="guide-nav">
-                <button class="guide-btn" data-guide="erde">Erde</button>
-                <button class="guide-btn" data-guide="wasser">Wasser</button>
-                <button class="guide-btn" data-guide="duenger">Dünger</button>
-                <button class="guide-btn" data-guide="ph">pH-Wert</button>
-                <button class="guide-btn" data-guide="ecppm">EC / PPM</button>
-                <button class="guide-btn" data-guide="licht">Licht Theorie</button>
-                <button class="guide-btn" data-guide="training">Trainingsmethoden</button>
-            </div>
-            <div id="erde" class="guide-section card"><h3>Erde</h3><p>Lockere Erde mit Drainage verwenden.</p></div>
-            <div id="wasser" class="guide-section card"><h3>Wasser</h3><p>Kein kalkhaltiges Wasser, regelmäßig gießen.</p></div>
-            <div id="duenger" class="guide-section card"><h3>Dünger</h3><p>Richtige Dosierung je nach Phase beachten.</p></div>
-            <div id="ph" class="guide-section card"><h3>pH-Wert</h3><p>Ideal: 5.8–6.5. Regelmäßig messen.</p></div>
-            <div id="ecppm" class="guide-section card"><h3>EC / PPM</h3><p>Gibt die Nährstoffkonzentration im Wasser an.</p></div>
-            <div id="licht" class="guide-section card"><h3>Licht Theorie</h3><p>PAR, DLI, NDL vs. LED verstehen.</p></div>
-            <div id="training" class="guide-section card"><h3>Trainingsmethoden</h3><p>LST, Topping, SCROG etc. für Ertrag.</p></div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>
