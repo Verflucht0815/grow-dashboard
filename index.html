@@ -3,118 +3,405 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GrowController Anleitung</title>
+<title>🌱 GrowController Pro</title>
 
 <style>
-  /* Basis Styles */
+  /* Farbpalette & Variablen */
+  :root {
+    --bg-color: #f0f4f2;
+    --text-color: #1a1a1a;
+    --card-bg: #fff;
+    --nav-bg: #2f6b3e;
+    --nav-text: #fff;
+    --btn-bg: #2f6b3e;
+    --btn-hover-bg: #3e8c4d;
+    --btn-text: #fff;
+    --border-color: #d4d9d4;
+    --shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  /* Grundlegende Styles */
   body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f4f2;
-    color: #1a1a1a;
     margin: 0;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    color: #2f6b3e;
-    margin-bottom: 30px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
   }
 
-  /* Container für Anleitung */
-  #guide-container {
-    max-width: 900px;
-    background: white;
-    margin: 0 auto;
-    padding: 30px 40px;
-    border-radius: 12px;
-    box-shadow: 0 5px 18px rgba(0,0,0,0.12);
-    line-height: 1.6;
+  /* Navigation oben */
+  .main-nav {
+    background-color: var(--nav-bg);
+    display: flex;
+    justify-content: center;
+    padding: 15px 10px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  /* Buttons Container */
-  .btn-container {
-    max-width: 900px;
-    margin: 0 auto 25px auto;
-    text-align: center;
-  }
-
-  button {
-    background-color: #2f6b3e;
-    color: white;
+  .main-btn {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
     border: none;
-    padding: 12px 22px;
-    margin: 5px 8px;
+    padding: 12px 24px;
+    margin: 0 12px;
     border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+    user-select: none;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .main-btn:hover, .main-btn.active {
+    background-color: var(--btn-hover-bg);
+  }
+
+  /* Sub-Navigation unter Klima */
+  .sub-nav {
+    background-color: #e9f0e8;
+    padding: 10px 15px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,0.05);
+  }
+
+  .nav-btn {
+    background-color: #a7c49c;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+    flex-shrink: 0;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background-color: #6a9a59;
+    color: white;
+  }
+
+  /* Module Container */
+  .module {
+    max-width: 900px;
+    margin: 25px auto;
+    padding: 0 20px 30px 20px;
+  }
+
+  /* Karten-Stil */
+  .card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow);
+    line-height: 1.5;
+  }
+
+  h2, h3 {
+    color: var(--nav-bg);
+    margin-top: 0;
+  }
+
+  /* Steuerung: Einzelliste */
+  #control .control-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  #control .control-list li {
+    background: #e9f0e8;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 14px 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  #control .control-list li:hover {
+    background-color: #c6ddb0;
+  }
+
+  /* Steuerung Buttons */
+  .toggle-switch {
+    position: relative;
+    width: 46px;
+    height: 24px;
+    display: inline-block;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 34px;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: var(--btn-bg);
+  }
+  input:checked + .slider:before {
+    transform: translateX(22px);
+  }
+
+  /* Dimmer Slider */
+  .dimmer-container {
+    margin-top: 8px;
+  }
+  input[type="range"] {
+    width: 100%;
+  }
+
+  /* Watt Anzeige rund */
+  .watt-display {
+    background-color: #d1e6cc;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    color: var(--nav-bg);
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    box-shadow: inset 0 2px 6px rgba(255,255,255,0.6);
+    user-select: none;
+  }
+
+  /* Klima Bodenfeuchtigkeit */
+  #soil-moisture {
+    margin-top: 20px;
+  }
+
+  /* Anleitung */
+  #guide .guide-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+    justify-content: center;
+  }
+  .guide-btn {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 1rem;
     transition: background-color 0.3s ease;
   }
-  button:hover {
-    background-color: #3e8c4d;
+  .guide-btn:hover, .guide-btn.active {
+    background-color: var(--btn-hover-bg);
   }
-
-  /* Typografie in Anleitung */
-  h2, h3 {
-    color: #2f6b3e;
-    margin-top: 1.6em;
-    margin-bottom: 0.6em;
+  .guide-section {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: var(--shadow);
   }
-  p {
-    margin-bottom: 1em;
-  }
-  ul {
-    margin-left: 20px;
-    margin-bottom: 1em;
-  }
-  li {
-    margin-bottom: 0.4em;
+  .guide-section:not(.active) {
+    display: none;
   }
 
   /* Responsive */
-  @media (max-width: 480px) {
-    #guide-container {
-      padding: 20px 15px;
-      margin: 10px;
+  @media (max-width: 600px) {
+    .main-nav {
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    button {
-      width: 100%;
-      margin: 8px 0;
+    .main-btn {
+      flex: 1 1 100px;
+      margin: 6px 4px;
+      font-size: 0.9rem;
+    }
+    .sub-nav {
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      flex: 1 1 100px;
+      margin-bottom: 6px;
     }
   }
 </style>
-
 </head>
 <body>
 
-<h1>GrowController Anleitung</h1>
+  <nav class="main-nav">
+    <button class="main-btn active" data-main="climate">Klima</button>
+    <button class="main-btn" data-main="control">Steuerung</button>
+    <button class="main-btn" data-main="guide">Anleitung</button>
+  </nav>
 
-<div class="btn-container">
-  <button onclick="loadGuide('ph.html')">pH-Wert Anleitung</button>
-  <button onclick="loadGuide('other.html')">Andere Anleitung</button>
-</div>
+  <!-- Klima Modul -->
+  <section id="climate" class="module">
+    <nav class="sub-nav">
+      <button class="nav-btn active" data-module="temp">Temperatur</button>
+      <button class="nav-btn" data-module="humidity">Luftfeuchtigkeit</button>
+      <button class="nav-btn" data-module="vpd">VPD</button>
+      <button class="nav-btn" data-module="soil-moisture">Bodenfeuchtigkeit</button>
+    </nav>
 
-<div id="guide-container">
-  <!-- Anleitung wird hier geladen -->
-  <p>Lade Anleitung...</p>
-</div>
+    <article id="temp" class="sub-module card active">
+      <h2>Temperatur</h2>
+      <p>Hier kommen Temperaturwerte und Graphen hin.</p>
+    </article>
+    <article id="humidity" class="sub-module card">
+      <h2>Luftfeuchtigkeit</h2>
+      <p>Hier kommen Luftfeuchtigkeitswerte und Graphen hin.</p>
+    </article>
+    <article id="vpd" class="sub-module card">
+      <h2>VPD (Vapor Pressure Deficit)</h2>
+      <p>Hier kommen VPD-Werte und Graphen hin.</p>
+    </article>
+    <article id="soil-moisture" class="sub-module card">
+      <h2>Bodenfeuchtigkeit</h2>
+      <p>Hier kommen Messwerte und Graphen zur Bodenfeuchtigkeit hin.</p>
+    </article>
+  </section>
+
+  <!-- Steuerung Modul -->
+  <section id="control" class="module" style="display:none;">
+    <h2>Steuerung</h2>
+    <ul class="control-list">
+      <li>
+        Licht
+        <label class="toggle-switch" title="Licht Ein/Aus">
+          <input type="checkbox" id="light-toggle" />
+          <span class="slider"></span>
+        </label>
+      </li>
+      <li>
+        Dimmer
+        <div class="dimmer-container">
+          <input type="range" id="light-dimmer" min="0" max="100" value="50" />
+        </div>
+      </li>
+      <li>
+        Verbrauchte Watt
+        <div class="watt-display" id="watt-display">120 W</div>
+      </li>
+      <li>
+        Wasserpumpe
+        <label class="toggle-switch" title="Wasserpumpe Ein/Aus">
+          <input type="checkbox" id="pump-toggle" />
+          <span class="slider"></span>
+        </label>
+      </li>
+      <li>
+        Luftbefeuchter
+        <label class="toggle-switch" title="Luftbefeuchter Ein/Aus">
+          <input type="checkbox" id="humidifier-toggle" />
+          <span class="slider"></span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Anleitung Modul -->
+  <section id="guide" class="module" style="display:none;">
+    <h2>Anleitung</h2>
+    <nav class="guide-nav">
+      <button class="guide-btn active" data-guide="ph">pH-Wert</button>
+      <button class="guide-btn" data-guide="licht">Licht Theorie</button>
+      <button class="guide-btn" data-guide="training">Trainingsmethoden</button>
+      <!-- Weitere Buttons ... -->
+    </nav>
+    <article id="ph" class="guide-section active">
+      <h3>pH-Wert</h3>
+      <p>Hier steht die pH-Wert Anleitung.</p>
+    </article>
+    <article id="licht" class="guide-section">
+      <h3>Licht Theorie</h3>
+      <p>Hier steht die Licht-Theorie.</p>
+    </article>
+    <article id="training" class="guide-section">
+      <h3>Trainingsmethoden</h3>
+      <p>Hier stehen die Trainingsmethoden.</p>
+    </article>
+  </section>
 
 <script>
-  async function loadGuide(filename) {
-    const container = document.getElementById('guide-container');
-    try {
-      const response = await fetch(`guides/${filename}`);
-      if (!response.ok) throw new Error(`Fehler: ${response.status} ${response.statusText}`);
-      const content = await response.text();
-      container.innerHTML = content;
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll oben hin
-    } catch (err) {
-      container.innerHTML = `<p style="color:red;">Die Anleitung konnte nicht geladen werden: ${err.message}</p>`;
-    }
+  // Navigation Hauptmenü
+  const mainButtons = document.querySelectorAll('.main-btn');
+  const modules = document.querySelectorAll('.module');
+  mainButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Hauptmodule anzeigen
+      const target = btn.dataset.main;
+      modules.forEach(m => {
+        m.style.display = (m.id === target) ? 'block' : 'none';
+      });
+      // Button aktiv markieren
+      mainButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Wenn Klima aktiv, dann erstes Untermodul aktivieren
+      if (target === 'climate') {
+        activateSubModule('temp');
+        // Unter-Navigation Buttons aktivieren
+        activateSubNav('temp');
+      }
+    });
+  });
+
+  // Sub-Navigation Klima
+  const subNavButtons = document.querySelectorAll('#climate .nav-btn');
+  const subModules = document.querySelectorAll('#climate .sub-module');
+  subNavButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.module;
+      activateSubModule(target);
+      activateSubNav(target);
+    });
+  });
+
+  function activateSubModule(id) {
+    subModules.forEach(m => {
+      m.classList.toggle('active', m.id === id);
+    });
+  }
+  function activateSubNav(id) {
+    subNavButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.module === id);
+    });
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    loadGuide('ph.html');
+  // Anleitung Navigation
+  const guideButtons = document.querySelectorAll('#guide .guide-btn');
+  const guideSections = document.querySelectorAll('#guide .guide-section');
+  guideButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.guide;
+      guideSections.forEach(s => {
+        s.classList.toggle('active', s.id === target);
+      });
+      guideButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
   });
 </script>
 
