@@ -77,10 +77,11 @@
             padding: 0;
             display: flex;
             justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
         }
         .nav li {
             position: relative;
-            margin: 0 15px;
         }
         .nav a {
             color: #2ecc71;
@@ -101,19 +102,26 @@
             display: none;
             position: absolute;
             background-color: #252f30;
-            min-width: 160px;
             border-radius: 5px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 1;
             top: 100%;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            min-width: 300px;
+            max-width: 400px;
         }
         .dropdown-content a {
             color: #2ecc71;
-            padding: 12px 16px;
+            padding: 8px 12px;
             text-decoration: none;
             display: block;
-            font-size: 1em;
+            font-size: 0.9em;
+            flex: 1 1 45%;
+            text-align: center;
         }
         .dropdown-content a:hover {
             background-color: #1c2526;
@@ -121,7 +129,7 @@
         }
         .dropdown:hover .dropdown-content,
         .dropdown.touched .dropdown-content {
-            display: block;
+            display: flex;
         }
         .container {
             max-width: 600px;
@@ -145,11 +153,17 @@
             background-color: #252f30;
         }
         .data label {
-            display: block;
+            display: flex;
+            align-items: center;
             font-weight: bold;
             margin-bottom: 10px;
             color: #e0e0e0;
             cursor: pointer;
+        }
+        .data label .toggle-indicator {
+            margin-left: 10px;
+            font-size: 1em;
+            color: #2ecc71;
         }
         .data span {
             font-size: 1.2em;
@@ -192,14 +206,30 @@
         }
         @media (max-width: 600px) {
             .nav ul {
-                flex-direction: column;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 5px;
             }
             .nav li {
-                margin: 5px 0;
+                flex: 1;
+                text-align: center;
+            }
+            .nav a {
+                font-size: 0.9em;
+                padding: 8px 5px;
             }
             .dropdown-content {
-                position: static;
-                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
+                left: 0;
+                transform: none;
+                padding: 5px;
+            }
+            .dropdown-content a {
+                font-size: 0.8em;
+                padding: 6px 8px;
+                flex: 1 1 48%;
             }
             .data .values div {
                 flex: 1 1 100%;
@@ -239,12 +269,12 @@
         <h2>Klima</h2>
         <div class="data">
             <div class="section">
-                <label onclick="toggleGraph('tempGraph')">Temperatur</label>
+                <label onclick="toggleGraph('tempGraph')">Temperatur <span class="toggle-indicator">▼</span></label>
                 <div class="values">
-                    <div><span>Aktuell: 24.5 °C</span></div>
-                    <div><span>Durchschnitt: -- °C</span></div>
-                    <div><span>Minimal: -- °C</span></div>
-                    <div><span>Maximal: -- °C</span></div>
+                    <div><span id="tempCurrent">Aktuell: -- °C</span></div>
+                    <div><span id="tempAvg">Durchschnitt: -- °C</span></div>
+                    <div><span id="tempMin">Minimal: -- °C</span></div>
+                    <div><span id="tempMax">Maximal: -- °C</span></div>
                 </div>
                 <div id="tempGraph" class="graph-section">
                     <div class="timeframe-selector">
@@ -262,12 +292,12 @@
                 </div>
             </div>
             <div class="section">
-                <label onclick="toggleGraph('humidityGraph')">Luftfeuchtigkeit</label>
+                <label onclick="toggleGraph('humidityGraph')">Luftfeuchtigkeit <span class="toggle-indicator">▼</span></label>
                 <div class="values">
-                    <div><span>Aktuell: 60 %</span></div>
-                    <div><span>Durchschnitt: -- %</span></div>
-                    <div><span>Minimal: -- %</span></div>
-                    <div><span>Maximal: -- %</span></div>
+                    <div><span id="humidityCurrent">Aktuell: -- %</span></div>
+                    <div><span id="humidityAvg">Durchschnitt: -- %</span></div>
+                    <div><span id="humidityMin">Minimal: -- %</span></div>
+                    <div><span id="humidityMax">Maximal: -- %</span></div>
                 </div>
                 <div id="humidityGraph" class="graph-section">
                     <div class="timeframe-selector">
@@ -285,12 +315,12 @@
                 </div>
             </div>
             <div class="section">
-                <label onclick="toggleGraph('vpdGraph')">VPD</label>
+                <label onclick="toggleGraph('vpdGraph')">VPD <span class="toggle-indicator">▼</span></label>
                 <div class="values">
-                    <div><span>Aktuell: 1.2 kPa</span></div>
-                    <div><span>Durchschnitt: -- kPa</span></div>
-                    <div><span>Minimal: -- kPa</span></div>
-                    <div><span>Maximal: -- kPa</span></div>
+                    <div><span id="vpdCurrent">Aktuell: -- kPa</span></div>
+                    <div><span id="vpdAvg">Durchschnitt: -- kPa</span></div>
+                    <div><span id="vpdMin">Minimal: -- kPa</span></div>
+                    <div><span id="vpdMax">Maximal: -- kPa</span></div>
                 </div>
                 <div id="vpdGraph" class="graph-section">
                     <div class="timeframe-selector">
@@ -310,31 +340,110 @@
         </div>
     </div>
     <script>
-        // Toggle dropdown on touch for mobile devices
+        // Toggle dropdown on touch or click for mobile devices
         document.querySelectorAll('.dropdown').forEach(dropdown => {
             const dropbtn = dropdown.querySelector('.dropbtn');
             dropbtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                dropdown.classList.toggle('touched');
+                const isTouched = dropdown.classList.contains('touched');
+                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
+                if (!isTouched) {
+                    dropdown.classList.add('touched');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('touched');
+                }
             });
         });
 
-        // Toggle graph visibility
+        // Toggle graph visibility and update indicator
         function toggleGraph(graphId) {
             const graph = document.getElementById(graphId);
+            const indicator = graph.parentElement.querySelector('label .toggle-indicator');
             graph.classList.toggle('active');
+            if (indicator) {
+                indicator.textContent = graph.classList.contains('active') ? '▲' : '▼';
+            }
         }
 
-        // Placeholder data for graphs
-        const placeholderData = {
-            '1h': Array(60).fill().map(() => Math.random() * 10 + 20),
-            '6h': Array(360).fill().map(() => Math.random() * 10 + 20),
-            '12h': Array(720).fill().map(() => Math.random() * 10 + 20),
-            '24h': Array(1440).fill().map(() => Math.random() * 10 + 20),
-            '7d': Array(10080).fill().map(() => Math.random() * 10 + 20),
-            '14d': Array(20160).fill().map(() => Math.random() * 10 + 20),
-            '30d': Array(43200).fill().map(() => Math.random() * 10 + 20)
+        // ThingSpeak configuration
+        const CHANNEL_ID = '2999714';
+        const API_KEY = '95YOHGB903ET32DX';
+        const BASE_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}`;
+
+        // Point counts and time ranges
+        const pointCounts = {
+            '1h': { count: 60, minutes: 60 },    // 1 point per minute
+            '6h': { count: 6, minutes: 360 },    // 1 point per hour
+            '12h': { count: 12, minutes: 720 },  // 1 point per hour
+            '24h': { count: 24, minutes: 1440 }, // 1 point per hour
+            '7d': { count: 7, minutes: 10080 },  // 1 point per day
+            '14d': { count: 14, minutes: 20160 },// 1 point per day
+            '30d': { count: 30, minutes: 43200 } // 1 point per day
         };
+
+        // Calculate VPD
+        function calculateVPD(temp, humidity) {
+            if (temp === null || humidity === null) return null;
+            const svp = 0.61078 * Math.exp((17.27 * temp) / (temp + 237.3));
+            return ((100 - humidity) / 100) * svp;
+        }
+
+        // Fetch data from ThingSpeak
+        async function fetchData(timeframe) {
+            const { count, minutes } = pointCounts[timeframe];
+            const end = new Date();
+            const start = new Date(end - minutes * 60 * 1000);
+            const startStr = start.toISOString().slice(0, 19).replace('T', ' ');
+            const endStr = end.toISOString().slice(0, 19).replace('T', ' ');
+            const url = `${BASE_URL}&start=${encodeURIComponent(startStr)}&end=${encodeURIComponent(endStr)}&results=${count}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const feeds = data.feeds;
+                const tempData = feeds.map(feed => feed.field1 ? parseFloat(feed.field1) : null);
+                const humidityData = feeds.map(feed => feed.field2 ? parseFloat(feed.field2) : null);
+                const vpdData = feeds.map((feed, i) => calculateVPD(tempData[i], humidityData[i]));
+                const labels = Array(count).fill().map((_, i) => {
+                    if (timeframe === '1h') return `${i}min`;
+                    if (['6h', '12h', '24h'].includes(timeframe)) return `${i}h`;
+                    return `${i}d`;
+                });
+                // Calculate stats
+                const tempStats = calculateStats(tempData, '°C');
+                const humidityStats = calculateStats(humidityData, '%');
+                const vpdStats = calculateStats(vpdData, 'kPa');
+                return { tempData, humidityData, vpdData, labels, tempStats, humidityStats, vpdStats };
+            } catch (error) {
+                console.error('Error fetching ThingSpeak data:', error);
+                // Fallback placeholder data
+                const count = pointCounts[timeframe].count;
+                const tempData = Array(count).fill().map(() => Math.random() * 10 + 20);
+                const humidityData = Array(count).fill().map(() => Math.random() * 30 + 50);
+                const vpdData = tempData.map((t, i) => calculateVPD(t, humidityData[i]));
+                const labels = Array(count).fill().map((_, i) => {
+                    if (timeframe === '1h') return `${i}min`;
+                    if (['6h', '12h', '24h'].includes(timeframe)) return `${i}h`;
+                    return `${i}d`;
+                });
+                const tempStats = calculateStats(tempData, '°C');
+                const humidityStats = calculateStats(humidityData, '%');
+                const vpdStats = calculateStats(vpdData, 'kPa');
+                return { tempData, humidityData, vpdData, labels, tempStats, humidityStats, vpdStats };
+            }
+        }
+
+        // Calculate statistics
+        function calculateStats(data, unit) {
+            const validValues = data.filter(v => v !== null);
+            const current = validValues.length ? validValues[validValues.length - 1].toFixed(1) : '--';
+            const avg = validValues.length ? (validValues.reduce((sum, v) => sum + v, 0) / validValues.length).toFixed(1) : '--';
+            const min = validValues.length ? Math.min(...validValues).toFixed(1) : '--';
+            const max = validValues.length ? Math.max(...validValues).toFixed(1) : '--';
+            return { current, avg, min, max };
+        }
 
         // Initialize charts
         const ctxTemp = document.getElementById('tempCanvas').getContext('2d');
@@ -345,71 +454,129 @@
             tempCanvas: new Chart(ctxTemp, {
                 type: 'line',
                 data: {
-                    labels: Array(60).fill().map((_, i) => i),
+                    labels: [],
                     datasets: [{
                         label: 'Temperatur (°C)',
-                        data: placeholderData['1h'],
+                        data: [],
                         borderColor: '#2ecc71',
                         backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        fill: true
+                        fill: false,
+                        pointRadius: 2,
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: { display: false },
-                        y: { beginAtZero: false }
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Zeit', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        y: {
+                            min: 12,
+                            max: 40,
+                            title: { display: true, text: 'Temperatur (°C)', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } }
                     }
                 }
             }),
             humidityCanvas: new Chart(ctxHumidity, {
                 type: 'line',
                 data: {
-                    labels: Array(60).fill().map((_, i) => i),
+                    labels: [],
                     datasets: [{
                         label: 'Luftfeuchtigkeit (%)',
-                        data: placeholderData['1h'].map(v => v * 2),
+                        data: [],
                         borderColor: '#2ecc71',
                         backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        fill: true
+                        fill: false,
+                        pointRadius: 2,
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: { display: false },
-                        y: { beginAtZero: false }
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Zeit', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        y: {
+                            min: 30,
+                            max: 100,
+                            title: { display: true, text: 'Luftfeuchtigkeit (%)', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } }
                     }
                 }
             }),
             vpdCanvas: new Chart(ctxVpd, {
                 type: 'line',
                 data: {
-                    labels: Array(60).fill().map((_, i) => i),
+                    labels: [],
                     datasets: [{
                         label: 'VPD (kPa)',
-                        data: placeholderData['1h'].map(v => v / 10),
+                        data: [],
                         borderColor: '#2ecc71',
                         backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        fill: true
+                        fill: false,
+                        pointRadius: 2,
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: { display: false },
-                        y: { beginAtZero: false }
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Zeit', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        y: {
+                            min: 0,
+                            max: 2,
+                            title: { display: true, text: 'VPD (kPa)', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } }
                     }
                 }
             })
         };
 
         // Update graph based on timeframe
-        function updateGraph(canvasId, timeframe) {
-            charts[canvasId].data.datasets[0].data = placeholderData[timeframe];
-            charts[canvasId].data.labels = Array(placeholderData[timeframe].length).fill().map((_, i) => i);
+        async function updateGraph(canvasId, timeframe) {
+            const { tempData, humidityData, vpdData, labels, tempStats, humidityStats, vpdStats } = await fetchData(timeframe);
+            const data = canvasId === 'tempCanvas' ? tempData : canvasId === 'humidityCanvas' ? humidityData : vpdData;
+            const stats = canvasId === 'tempCanvas' ? tempStats : canvasId === 'humidityCanvas' ? humidityStats : vpdStats;
+            const unit = canvasId === 'tempCanvas' ? '°C' : canvasId === 'humidityCanvas' ? '%' : 'kPa';
+            charts[canvasId].data.datasets[0].data = data;
+            charts[canvasId].data.labels = labels;
             charts[canvasId].update();
+
+            // Update stats
+            const prefix = canvasId === 'tempCanvas' ? 'temp' : canvasId === 'humidityCanvas' ? 'humidity' : 'vpd';
+            document.getElementById(`${prefix}Current`).textContent = `Aktuell: ${stats.current} ${unit}`;
+            document.getElementById(`${prefix}Avg`).textContent = `Durchschnitt: ${stats.avg} ${unit}`;
+            document.getElementById(`${prefix}Min`).textContent = `Minimal: ${stats.min} ${unit}`;
+            document.getElementById(`${prefix}Max`).textContent = `Maximal: ${stats.max} ${unit}`;
         }
+
+        // Initial data load
+        updateGraph('tempCanvas', '1h');
+        updateGraph('humidityCanvas', '1h');
+        updateGraph('vpdCanvas', '1h');
     </script>
 </body>
 </html>
