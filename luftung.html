@@ -1,0 +1,247 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Controller - Lüftung</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #1c2526;
+            margin: 0;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #2ecc71;
+            font-size: 2.5em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .nav {
+            background-color: #2f3b3c;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        .nav li {
+            position: relative;
+        }
+        .nav a {
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            display: block;
+            transition: color 0.2s;
+        }
+        .nav a:hover {
+            color: #27ae60;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #252f30;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .dropdown-content a {
+            color: #2ecc71;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9em;
+            flex: 1 1 45%;
+            text-align: center;
+        }
+        .dropdown-content a:hover {
+            background-color: #1c2526;
+            color: #27ae60;
+        }
+        .dropdown:hover .dropdown-content,
+        .dropdown.touched .dropdown-content {
+            display: flex;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2f3b3c;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .container h2 {
+            color: #2ecc71;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .content h3 {
+            color: #2ecc71;
+            margin-top: 20px;
+        }
+        .content p, .content ul, .content ol {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        .content ul, .content ol {
+            padding-left: 20px;
+        }
+        .content li {
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            .nav ul {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }
+            .nav li {
+                flex: 1;
+                text-align: center;
+            }
+            .nav a {
+                font-size: 0.9em;
+                padding: 8px 5px;
+            }
+            .dropdown-content {
+                min-width: 100%;
+                max-width: 100%;
+                left: 0;
+                transform: none;
+                padding: 5px;
+            }
+            .dropdown-content a {
+                font-size: 0.8em;
+                padding: 6px 8px;
+                flex: 1 1 48%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Grow Controller</h1>
+    </div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2>Lüftung</h2>
+        <div class="content">
+            <h3>Einführung</h3>
+            <p>Die Lüftung sorgt für einen optimalen Luftaustausch und CO₂-Versorgung der Pflanzen. Diese Seite bietet eine Übersicht über die Steuerung der Lüftung mit dem Grow Controller.</p>
+            <p><strong>Hinweis</strong>: Detaillierte Informationen zur Lüftung findest du in der <a href="klima-anleitung.html">Klima-Anleitung</a>.</p>
+        </div>
+    </div>
+    <script>
+        // Toggle dropdown on touch or click for mobile devices
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const dropbtn = dropdown.querySelector('.dropbtn');
+            dropbtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isTouched = dropdown.classList.contains('touched');
+                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
+                if (!isTouched) {
+                    dropdown.classList.add('touched');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('touched');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
