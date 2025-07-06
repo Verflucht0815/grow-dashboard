@@ -1,0 +1,495 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Controller - Luftbefeuchter</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #1c2526;
+            margin: 0;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #2ecc71;
+            font-size: 2.5em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .nav {
+            background-color: #2f3b3c;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        .nav li {
+            position: relative;
+        }
+        .nav a {
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            display: block;
+            transition: color 0.2s;
+        }
+        .nav a:hover {
+            color: #27ae60;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #252f30;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .dropdown-content a {
+            color: #2ecc71;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9em;
+            flex: 1 1 45%;
+            text-align: center;
+        }
+        .dropdown-content a:hover {
+            background-color: #1c2526;
+            color: #27ae60;
+        }
+        .dropdown:hover .dropdown-content,
+        .dropdown.touched .dropdown-content {
+            display: flex;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2f3b3c;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .container h2 {
+            color: #2ecc71;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
+        }
+        .data label {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label .toggle-indicator {
+            margin-left: 10px;
+            font-size: 1em;
+            color: #2ecc71;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .data .values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .data .values div {
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .data .values span {
+            font-size: 1em;
+            display: block;
+        }
+        .input-container {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .input-container input {
+            background-color: #1c2526;
+            color: #e0e0e0;
+            border: 1px solid #4a5657;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .input-container button {
+            background-color: #2ecc71;
+            color: #1c2526;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .input-container button:hover {
+            background-color: #27ae60;
+        }
+        .input-container button.active {
+            background-color: #27ae60;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section canvas {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            .nav ul {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }
+            .nav li {
+                flex: 1;
+                text-align: center;
+            }
+            .nav a {
+                font-size: 0.9em;
+                padding: 8px 5px;
+            }
+            .dropdown-content {
+                min-width: 100%;
+                max-width: 100%;
+                left: 0;
+                transform: none;
+                padding: 5px;
+            }
+            .dropdown-content a {
+                font-size: 0.8em;
+                padding: 6px 8px;
+                flex: 1 1 48%;
+            }
+            .data .values div,
+            .input-container input,
+            .input-container button {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Grow Controller</h1>
+    </div>
+    <div class="nav">
+        <ul>
+            <li><a href="/grow-dashboard/index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="/grow-dashboard/bewasserung.html">Bewässerung</a>
+                    <a href="/grow-dashboard/licht.html">Licht</a>
+                    <a href="/grow-dashboard/luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="/grow-dashboard/luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="/grow-dashboard/klima-anleitung.html">Klima</a>
+                    <a href="/grow-dashboard/substrat.html">Substrat</a>
+                    <a href="/grow-dashboard/wasser.html">Wasser</a>
+                    <a href="/grow-dashboard/nahrstoffe.html">Nährstoffe</a>
+                    <a href="/grow-dashboard/licht-anleitung.html">Licht</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2>Luftbefeuchter</h2>
+        <div class="data">
+            <div class="section">
+                <div class="values">
+                    <div><span id="currentHumidity">Aktuelle Luftfeuchtigkeit: 50 %</span></div>
+                    <div><span id="humidifierStatus">Luftbefeuchter: Aus</span></div>
+                </div>
+                <div class="input-container">
+                    <label>Min. Luftfeuchtigkeit (%): <input type="number" id="minHumidity" value="40" min="0" max="100" step="1" oninput="updateHumiditySettings()"></label>
+                    <label>Max. Luftfeuchtigkeit (%): <input type="number" id="maxHumidity" value="60" min="0" max="100" step="1" oninput="updateHumiditySettings()"></label>
+                    <button id="autoButton" onclick="toggleAutoMode()">Automatik ein/aus</button>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('humidityGraphSection')">Luftfeuchtigkeitsverlauf <span class="toggle-indicator">▼</span></label>
+                <div id="humidityGraphSection" class="sub-section">
+                    <canvas id="dailyHumidityChart"></canvas>
+                    <canvas id="weeklyHumidityChart"></canvas>
+                    <canvas id="monthlyHumidityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Toggle dropdown on touch or click for mobile devices
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const dropbtn = dropdown.querySelector('.dropbtn');
+            dropbtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isTouched = dropdown.classList.contains('touched');
+                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
+                if (!isTouched) {
+                    dropdown.classList.add('touched');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('touched');
+                }
+            });
+        });
+
+        // Toggle section visibility
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const indicator = section.parentElement.querySelector('label .toggle-indicator');
+            section.classList.toggle('active');
+            if (indicator) {
+                indicator.textContent = section.classList.contains('active') ? '▲' : '▼';
+            }
+        }
+
+        // Load saved values from localStorage
+        const savedMinHumidity = localStorage.getItem('minHumidity') || '40';
+        const savedMaxHumidity = localStorage.getItem('maxHumidity') || '60';
+        const savedAutoMode = localStorage.getItem('autoMode') === 'true';
+        document.getElementById('minHumidity').value = savedMinHumidity;
+        document.getElementById('maxHumidity').value = savedMaxHumidity;
+        document.getElementById('autoButton').classList.toggle('active', savedAutoMode);
+
+        // Simulate current humidity (placeholder, replace with API call)
+        function getCurrentHumidity() {
+            return Math.floor(Math.random() * (70 - 30 + 1)) + 30;
+        }
+
+        // Update humidifier status based on current humidity and settings
+        function updateHumidifier() {
+            const currentHumidity = getCurrentHumidity();
+            const minHumidity = parseFloat(document.getElementById('minHumidity').value) || 40;
+            const maxHumidity = parseFloat(document.getElementById('maxHumidity').value) || 60;
+            const autoMode = localStorage.getItem('autoMode') === 'true';
+            let humidifierStatus = localStorage.getItem('humidifierStatus') || 'Aus';
+
+            if (autoMode) {
+                if (currentHumidity < minHumidity) {
+                    humidifierStatus = 'An';
+                } else if (currentHumidity >= maxHumidity) {
+                    humidifierStatus = 'Aus';
+                }
+                localStorage.setItem('humidifierStatus', humidifierStatus);
+            }
+
+            document.getElementById('currentHumidity').textContent = `Aktuelle Luftfeuchtigkeit: ${currentHumidity} %`;
+            document.getElementById('humidifierStatus').textContent = `Luftbefeuchter: ${humidifierStatus}`;
+        }
+
+        // Toggle auto mode
+        function toggleAutoMode() {
+            const autoButton = document.getElementById('autoButton');
+            const autoMode = localStorage.getItem('autoMode') !== 'true';
+            localStorage.setItem('autoMode', autoMode);
+            autoButton.classList.toggle('active', autoMode);
+            updateHumidifier();
+        }
+
+        // Update humidity settings
+        function updateHumiditySettings() {
+            let minHumidity = parseFloat(document.getElementById('minHumidity').value) || 40;
+            let maxHumidity = parseFloat(document.getElementById('maxHumidity').value) || 60;
+            if (minHumidity > maxHumidity) {
+                minHumidity = maxHumidity;
+                document.getElementById('minHumidity').value = minHumidity;
+            }
+            localStorage.setItem('minHumidity', minHumidity);
+            localStorage.setItem('maxHumidity', maxHumidity);
+            updateHumidifier();
+        }
+
+        // Chart.js setup for humidity graphs
+        function generateChartData(hours, min, max) {
+            const data = [];
+            for (let i = 0; i < hours; i++) {
+                data.push(Math.floor(Math.random() * (max - min + 1)) + min);
+            }
+            return data;
+        }
+
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, color: '#e0e0e0', font: { size: 16 } }
+                },
+                scales: {
+                    x: { display: true, title: { display: true, text: 'Zeit', color: '#e0e0e0' }, ticks: { color: '#e0e0e0' } },
+                    y: { display: true, title: { display: true, text: 'Luftfeuchtigkeit (%)', color: '#e0e0e0' }, ticks: { color: '#e0e0e0' }, min: 0, max: 100 }
+                }
+            }
+        };
+
+        // Daily Chart
+        new Chart(document.getElementById('dailyHumidityChart'), {
+            ...chartConfig,
+            data: {
+                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'Luftfeuchtigkeit',
+                    data: generateChartData(24, 30, 70),
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartConfig.options,
+                plugins: { ...chartConfig.options.plugins, title: { ...chartConfig.options.plugins.title, text: 'Luftfeuchtigkeit (24 Stunden)' } }
+            }
+        });
+
+        // Weekly Chart
+        new Chart(document.getElementById('weeklyHumidityChart'), {
+            ...chartConfig,
+            data: {
+                labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                datasets: [{
+                    label: 'Luftfeuchtigkeit',
+                    data: generateChartData(7, 30, 70),
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartConfig.options,
+                plugins: { ...chartConfig.options.plugins, title: { ...chartConfig.options.plugins.title, text: 'Luftfeuchtigkeit (Woche)' } }
+            }
+        });
+
+        // Monthly Chart
+        new Chart(document.getElementById('monthlyHumidityChart'), {
+            ...chartConfig,
+            data: {
+                labels: Array.from({ length: 30 }, (_, i) => `Tag ${i + 1}`),
+                datasets: [{
+                    label: 'Luftfeuchtigkeit',
+                    data: generateChartData(30, 30, 70),
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartConfig.options,
+                plugins: { ...chartConfig.options.plugins, title: { ...chartConfig.options.plugins.title, text: 'Luftfeuchtigkeit (Monat)' } }
+            }
+        });
+
+        // Initialize and update periodically
+        updateHumidifier();
+        updateHumiditySettings();
+        setInterval(updateHumidifier, 5000); // Update every 5 seconds
+    </script>
+</body>
+</html>
