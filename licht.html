@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -144,19 +105,133 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label .toggle-indicator {
+            margin-left: 10px;
+            font-size: 1em;
+            color: #2ecc71;
+        }
+        .data label .intensity-value {
+            margin-left: 10px;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .data .values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .data .values div {
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .data .values span {
+            font-size: 1em;
+            display: block;
+        }
+        .slider-container {
+            margin-top: 10px;
+        }
+        .slider-container input[type="range"] {
+            width: 100%;
+            background: #4a5657;
+            border-radius: 5px;
+            height: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .graph-section {
+            display: none;
+            margin-top: 15px;
+        }
+        .graph-section.active {
+            display: block;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .input-container {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .sun-inputs {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .input-container input,
+        .sun-inputs input {
+            background-color: #1c2526;
+            color: #e0e0e0;
+            border: 1px solid #4a5657;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .input-container button,
+        .sun-inputs button {
+            background-color: #2ecc71;
+            color: #1c2526;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .input-container button:hover,
+        .sun-inputs button:hover {
+            background-color: #27ae60;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +260,13 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .data .values div,
+            .input-container input,
+            .input-container button,
+            .sun-inputs input,
+            .sun-inputs button {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
@@ -194,34 +276,95 @@
     </div>
     <div class="nav">
         <ul>
-            <li><a href="index.html">Klima</a></li>
+            <li><a href="/grow-dashboard/index.html">Klima</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbtn">Steuerung</a>
                 <div class="dropdown-content">
-                    <a href="bewasserung.html">Bewässerung</a>
-                    <a href="licht.html">Licht</a>
-                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                    <a href="luftung.html">Lüftung</a>
+                    <a href="/grow-dashboard/bewasserung.html">Bewässerung</a>
+                    <a href="/grow-dashboard/licht.html">Licht</a>
+                    <a href="/grow-dashboard/luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="/grow-dashboard/luftung.html">Lüftung</a>
                 </div>
             </li>
             <li class="dropdown">
                 <a href="#" class="dropbtn">Anleitungen</a>
                 <div class="dropdown-content">
-                    <a href="klima-anleitung.html">Klima</a>
-                    <a href="substrat.html">Substrat</a>
-                    <a href="wasser.html">Wasser</a>
-                    <a href="nahrstoffe.html">Nährstoffe</a>
-                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="/grow-dashboard/klima-anleitung.html">Klima</a>
+                    <a href="/grow-dashboard/substrat.html">Substrat</a>
+                    <a href="/grow-dashboard/wasser.html">Wasser</a>
+                    <a href="/grow-dashboard/nahrstoffe.html">Nährstoffe</a>
+                    <a href="/grow-dashboard/licht-anleitung.html">Licht</a>
                 </div>
             </li>
         </ul>
     </div>
     <div class="container">
         <h2>Licht</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Licht ist essenziell für die Photosynthese und das Pflanzenwachstum. Diese Seite bietet eine Übersicht über die Steuerung der Beleuchtung mit dem Grow Controller.</p>
-            <p><strong>Hinweis</strong>: Detaillierte Informationen zur Beleuchtung findest du in der <a href="licht-anleitung.html">Licht-Anleitung</a>.</p>
+        <div class="data">
+            <div class="section">
+                <label>Lichtintensität <span class="intensity-value" id="intensityValue"> 50 %</span></label>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" step="1" value="50" id="lightIntensity" oninput="updateLightValues(this.value)">
+                </div>
+                <div class="values">
+                    <div><span id="wattValue">Watt: 500 W</span></div>
+                    <div><span id="ppfdValue">PPFD: 1375.0 µmol/m²/s</span></div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('timerSection')">Zeitschaltung <span class="toggle-indicator">▼</span></label>
+                <div id="timerSection" class="graph-section">
+                    <div class="input-container">
+                        <label>Startzeit: <input type="time" id="lightStart" value="18:00"></label>
+                        <label>Endzeit: <input type="time" id="lightEnd" value="06:00"></label>
+                        <button onclick="updateTimer()">Zeit übernehmen</button>
+                        <div class="sun-inputs">
+                            <label>Sonnenaufgang Dauer (min): <input type="number" id="sunriseDuration" value="30" min="0" step="1" oninput="updateTimer()"></label>
+                            <label>Sonnenuntergang Dauer (min): <input type="number" id="sunsetDuration" value="30" min="0" step="1" oninput="updateTimer()"></label>
+                        </div>
+                    </div>
+                    <div class="values">
+                        <div><span id="timerValue">Aktueller Timer: 18:00–06:00</span></div>
+                        <div><span id="countdownValue">Zeit bis Umschalten: --</span></div>
+                        <div><span id="sunriseTime">Sonnenaufgang: 18:00 (Dauer: 30 min)</span></div>
+                        <div><span id="sunsetTime">Sonnenuntergang: 06:00 (Dauer: 30 min)</span></div>
+                    </div>
+                    <div class="section">
+                        <label onclick="toggleSection('behaviorSubSection')">Lampenverhalten <span class="toggle-indicator">▼</span></label>
+                        <div id="behaviorSubSection" class="sub-section">
+                            <p>Die Lampe dimmt bei Sonnenaufgang linear von 0 % auf die eingestellte Intensität über die angegebene Dauer, beginnend zur Startzeit. Bei Sonnenuntergang dimmt sie linear von der Intensität auf 0 % über die angegebene Dauer, endend zur Endzeit.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('energySection')">Energieverbrauch <span class="toggle-indicator">▼</span></label>
+                <div id="energySection" class="graph-section">
+                    <div class="values">
+                        <div><span id="wattCurrent">Aktueller Verbrauch: 500 W</span></div>
+                        <div><span id="kwhValue">Energieverbrauch (24h): 6.0 kWh</span></div>
+                        <div><span id="totalEnergy">Gesamtbedarf: 720.0 kWh</span></div>
+                        <div><span id="totalCost">Gesamtbetrag: 216.00 €</span></div>
+                    </div>
+                    <div class="input-container">
+                        <label>Stunden pro Tag: <input type="number" id="hoursPerDay" value="12" min="0" max="24" step="0.1" oninput="updateEnergy()"></label>
+                        <label>Verbrauch: <input type="number" id="wattInput" value="500" min="0" oninput="updateEnergy()"></label>
+                        <label>kWh-Preis (€): <input type="number" id="kwhPrice" value="0.30" min="0" step="0.01" oninput="updateEnergy()"></label>
+                        <label>Tage (Vegetation): <input type="number" id="vegiDays" value="60" min="0" oninput="updateEnergy()"></label>
+                        <label>Tage (Blüte): <input type="number" id="bloomDays" value="60" min="0" oninput="updateEnergy()"></label>
+                    </div>
+                    <div class="section">
+                        <label onclick="toggleSection('consumptionSubSection')">Verbrauch (Tag/Woche/Monat) <span class="toggle-indicator">▼</span></label>
+                        <div id="consumptionSubSection" class="sub-section">
+                            <div class="values">
+                                <div><span id="dailyConsumption">Verbrauch pro Tag: 6.0 kWh</span></div>
+                                <div><span id="weeklyConsumption">Verbrauch pro Woche: 42.0 kWh</span></div>
+                                <div><span id="monthlyConsumption">Verbrauch pro Monat: 180.0 kWh</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -241,6 +384,138 @@
                     dropdown.classList.remove('touched');
                 }
             });
+        });
+
+        // Toggle section visibility
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const indicator = section.parentElement.querySelector('label .toggle-indicator');
+            section.classList.toggle('active');
+            if (indicator) {
+                indicator.textContent = section.classList.contains('active') ? '▲' : '▼';
+            }
+        }
+
+        // Load saved values from localStorage
+        const savedStart = localStorage.getItem('lightStart') || '18:00';
+        const savedEnd = localStorage.getItem('lightEnd') || '06:00';
+        const savedSunriseDuration = localStorage.getItem('sunriseDuration') || '30';
+        const savedSunsetDuration = localStorage.getItem('sunsetDuration') || '30';
+        const savedHours = localStorage.getItem('hoursPerDay') || '12';
+        const savedWatt = localStorage.getItem('wattInput') || '500';
+        const savedKwhPrice = localStorage.getItem('kwhPrice') || '0.30';
+        const savedVegiDays = localStorage.getItem('vegiDays') || '60';
+        const savedBloomDays = localStorage.getItem('bloomDays') || '60';
+        document.getElementById('lightStart').value = savedStart;
+        document.getElementById('lightEnd').value = savedEnd;
+        document.getElementById('sunriseDuration').value = savedSunriseDuration;
+        document.getElementById('sunsetDuration').value = savedSunsetDuration;
+        document.getElementById('hoursPerDay').value = savedHours;
+        document.getElementById('wattInput').value = savedWatt;
+        document.getElementById('kwhPrice').value = savedKwhPrice;
+        document.getElementById('vegiDays').value = savedVegiDays;
+        document.getElementById('bloomDays').value = savedBloomDays;
+
+        // Update light values based on intensity
+        function updateLightValues(intensity) {
+            const watt = intensity * 10; // 100% = 1000W
+            const ppfd = intensity * 27.5; // 100% = 2750 PPFD
+            document.getElementById('intensityValue').textContent = ` ${intensity} %`;
+            document.getElementById('wattValue').textContent = `Watt: ${watt} W`;
+            document.getElementById('ppfdValue').textContent = `PPFD: ${ppfd.toFixed(1)} µmol/m²/s`;
+        }
+
+        // Update timer and sunrise/sunset durations
+        function updateTimer() {
+            const start = document.getElementById('lightStart').value;
+            const end = document.getElementById('lightEnd').value;
+            const sunriseDuration = parseInt(document.getElementById('sunriseDuration').value) || 30;
+            const sunsetDuration = parseInt(document.getElementById('sunsetDuration').value) || 30;
+            localStorage.setItem('lightStart', start);
+            localStorage.setItem('lightEnd', end);
+            localStorage.setItem('sunriseDuration', sunriseDuration);
+            localStorage.setItem('sunsetDuration', sunsetDuration);
+            document.getElementById('timerValue').textContent = `Aktueller Timer: ${start}–${end}`;
+            document.getElementById('sunriseTime').textContent = `Sonnenaufgang: ${start} (Dauer: ${sunriseDuration} min)`;
+            document.getElementById('sunsetTime').textContent = `Sonnenuntergang: ${end} (Dauer: ${sunsetDuration} min)`;
+            updateCountdown();
+        }
+
+        // Update energy calculations
+        function updateEnergy() {
+            const hoursPerDay = parseFloat(document.getElementById('hoursPerDay').value) || 12;
+            const wattInput = parseFloat(document.getElementById('wattInput').value) || 500;
+            const kwhPrice = parseFloat(document.getElementById('kwhPrice').value) || 0.30;
+            const vegiDays = parseInt(document.getElementById('vegiDays').value) || 60;
+            const bloomDays = parseInt(document.getElementById('bloomDays').value) || 60;
+            localStorage.setItem('hoursPerDay', hoursPerDay);
+            localStorage.setItem('wattInput', wattInput);
+            localStorage.setItem('kwhPrice', kwhPrice);
+            localStorage.setItem('vegiDays', vegiDays);
+            localStorage.setItem('bloomDays', bloomDays);
+            const dailyKwh = (wattInput * hoursPerDay) / 1000;
+            const weeklyKwh = dailyKwh * 7;
+            const monthlyKwh = dailyKwh * 30;
+            const totalKwh = (wattInput * hoursPerDay * (vegiDays + bloomDays)) / 1000;
+            const totalCost = totalKwh * kwhPrice;
+            document.getElementById('wattCurrent').textContent = `Aktueller Verbrauch: ${wattInput} W`;
+            document.getElementById('kwhValue').textContent = `Energieverbrauch (24h): ${dailyKwh.toFixed(1)} kWh`;
+            document.getElementById('totalEnergy').textContent = `Gesamtbedarf: ${totalKwh.toFixed(1)} kWh`;
+            document.getElementById('totalCost').textContent = `Gesamtbetrag: ${totalCost.toFixed(2)} €`;
+            document.getElementById('dailyConsumption').textContent = `Verbrauch pro Tag: ${dailyKwh.toFixed(1)} kWh`;
+            document.getElementById('weeklyConsumption').textContent = `Verbrauch pro Woche: ${weeklyKwh.toFixed(1)} kWh`;
+            document.getElementById('monthlyConsumption').textContent = `Verbrauch pro Monat: ${monthlyKwh.toFixed(1)} kWh`;
+        }
+
+        // Countdown to next light switch
+        function updateCountdown() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const currentTime = hours * 3600 + minutes * 60 + seconds;
+            const [startHour, startMinute] = document.getElementById('lightStart').value.split(':').map(Number);
+            const [endHour, endMinute] = document.getElementById('lightEnd').value.split(':').map(Number);
+            const sunriseDuration = parseInt(document.getElementById('sunriseDuration').value) || 30;
+            const sunsetDuration = parseInt(document.getElementById('sunsetDuration').value) || 30;
+            const sunriseTime = startHour * 3600 + startMinute * 60;
+            const sunsetTime = endHour * 3600 + endMinute * 60;
+            const sunsetStartTime = sunsetTime - sunsetDuration * 60; // Sunset starts earlier
+            let nextSwitch, label;
+            if (sunsetTime > sunriseTime) {
+                // Light is on between sunrise and sunset start
+                if (currentTime >= sunriseTime && currentTime < sunsetStartTime) {
+                    nextSwitch = sunsetStartTime;
+                    label = 'Sonnenuntergang';
+                } else {
+                    nextSwitch = sunriseTime + (currentTime < sunriseTime ? 0 : 24 * 3600);
+                    label = 'Sonnenaufgang';
+                }
+            } else {
+                // Light is on across midnight
+                if (currentTime >= sunriseTime || currentTime < sunsetStartTime) {
+                    nextSwitch = sunsetStartTime + (currentTime < sunsetStartTime ? 0 : 24 * 3600);
+                    label = 'Sonnenuntergang';
+                } else {
+                    nextSwitch = sunriseTime;
+                    label = 'Sonnenaufgang';
+                }
+            }
+            const secondsUntilSwitch = nextSwitch - currentTime;
+            const hoursLeft = Math.floor(secondsUntilSwitch / 3600);
+            const minutesLeft = Math.floor((secondsUntilSwitch % 3600) / 60);
+            const secondsLeft = secondsUntilSwitch % 60;
+            document.getElementById('countdownValue').textContent = `Zeit bis ${label}: ${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
+        }
+
+        // Initialize values and countdown
+        updateLightValues(50); // Initial intensity
+        updateTimer();
+        updateEnergy();
+        updateCountdown();
+        setInterval(updateCountdown, 1000); // Update countdown every second
+        document.getElementById('lightIntensity').addEventListener('input', () => {
+            updateLightValues(document.getElementById('lightIntensity').value);
         });
     </script>
 </body>
