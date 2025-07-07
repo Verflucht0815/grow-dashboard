@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -144,19 +105,75 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: block;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .sub-section p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .sub-section ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .sub-section ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .sub-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .sub-section table th,
+        .sub-section table td {
+            border: 1px solid #4a5657;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .sub-section table th {
+            background-color: #2ecc71;
+            color: #1c2526;
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +202,19 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .sub-section h3 {
+                font-size: 1em;
+            }
+            .sub-section p,
+            .sub-section ul li,
+            .sub-section table th,
+            .sub-section table td {
+                font-size: 0.8em;
+            }
+            .sub-section table th,
+            .sub-section table td {
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -192,76 +222,239 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-<div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
         <h2>Wasser</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Die Wasserqualität und -menge sind entscheidend für die Nährstoffaufnahme und das Pflanzenwachstum. Diese Anleitung bietet Informationen zur Wasseraufbereitung und Bewässerung.</p>
-            <h3>Detaillierte Erklärungen</h3>
-            <ul>
-                <li><strong>pH-Wert</strong>:
-                    <p><strong>Bereich</strong>: 5.8–6.2 für Erde und Kokos, 5.5–6.5 für Hydroponik.</p>
-                    <p><strong>Warum?</strong> Der pH-Wert beeinflusst die Nährstoffverfügbarkeit (Liu et al., 2024).</p>
-                </li>
-                <li><strong>EC-Wert</strong>:
-                    <p><strong>Bereich</strong>: 0.4–2.0 mS/cm, abhängig von der Wachstumsphase.</p>
-                    <p><strong>Warum?</strong> Der EC-Wert gibt die Nährstoffkonzentration an (Chen et al., 2025).</p>
-                </li>
-                <li><strong>Wassertemperatur</strong>:
-                    <p><strong>Bereich</strong>: 18–22 °C.</p>
-                    <p><strong>Warum?</strong> Zu kaltes oder warmes Wasser kann die Wurzeln schädigen (Gomez & Wang, 2024).</p>
-                </li>
-            </ul>
-            <h3>Praktische Anleitungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <ol>
-                        <li>Verwende Wasser mit pH 5.8–6.2 und EC 0.4–0.8 mS/cm.</li>
-                        <li>Bewässere sparsam, um Staunässe zu vermeiden.</li>
-                    </ol>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <ol>
-                        <li>Halte den pH-Wert bei 5.8–6.2 und EC bei 0.8–1.5 mS/cm.</li>
-                        <li>Bewässere regelmäßig, aber lasse das Substrat leicht austrocknen.</li>
-                    </ol>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <ol>
-                        <li>Halte den pH-Wert bei 5.8–6.2 und EC bei 1.5–2.0 mS/cm.</li>
-                        <li>Spüle regelmäßig, um Salzablagerungen zu vermeiden.</li>
-                    </ol>
-                </li>
-            </ul>
-            <h3>Hinweis</h3>
-            <p>Verwende ein pH- und EC-Meter für präzise Messungen. Stelle sicher, dass das Wasser sauber und frei von Verunreinigungen ist.</p>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('phSection')">pH-Wert <span class="arrow">▼</span></label>
+                <div id="phSection" class="sub-section">
+                    <h3>🧪 Was gemessen wird</h3>
+                    <p>Der pH-Wert beschreibt die Konzentration freier Wasserstoffionen (H⁺) in einer Lösung – er ist ein logarithmisches Maß für den Säuregrad:</p>
+                    <ul>
+                        <li>pH < 7 = sauer</li>
+                        <li>pH = 7 = neutral</li>
+                        <li>pH > 7 = basisch</li>
+                    </ul>
+                    <h3>Relevanz</h3>
+                    <p>pH beeinflusst direkt die chemische Verfügbarkeit von Nährstoffen in der Nährlösung. Die meisten Makro- und Mikronährstoffe haben ein enges pH-Fenster, in dem sie in löslicher, pflanzenverfügbarer Form vorliegen.</p>
+                    <h3>Zielbereiche und physiologische Effekte</h3>
+                    <table>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Zielbereich</th>
+                            <th>Physiologischer Hintergrund</th>
+                        </tr>
+                        <tr>
+                            <td>Keimung</td>
+                            <td>5,8–6,2</td>
+                            <td>Fördert Mobilisierung von P, Zn, Mn; schützt zarte Wurzelhaare vor toxischen Metallionen</td>
+                        </tr>
+                        <tr>
+                            <td>Vegetativ</td>
+                            <td>5,6–6,0</td>
+                            <td>Optimiert N-Aufnahme (NO₃⁻), Mg, Ca. Aktiviert Enzyme für Zellteilung</td>
+                        </tr>
+                        <tr>
+                            <td>Generativ</td>
+                            <td>5,8–6,2</td>
+                            <td>Wichtig für K- und P-Verfügbarkeit; schützt Mikronährstoffe vor Ausfällung (Fe, Cu, B)</td>
+                        </tr>
+                    </table>
+                    <h3>Abweichungen & Folgen</h3>
+                    <ul>
+                        <li>pH < 5,5: Hemmung der Ca-/Mg-Aufnahme, Mangan- oder Aluminiumtoxizität</li>
+                        <li>pH > 6,5: Ausfällung von Fe³⁺, Zn²⁺, Mn²⁺ – → Mikronährstoffmängel trotz ausreichender Düngung</li>
+                    </ul>
+                    <h3>Empfehlungen</h3>
+                    <ul>
+                        <li>pH täglich messen (idealerweise mit Laborgerät oder kalibriertem Handgerät)</li>
+                        <li>Korrektur über verdünnte Phosphorsäure (pH-) oder Kaliumhydroxid (pH+)</li>
+                        <li>pH-Wert langsam ändern (<0,3/Tag) um osmotischen Schock zu vermeiden</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('ecSection')">Elektrische Leitfähigkeit (EC) <span class="arrow">▼</span></label>
+                <div id="ecSection" class="sub-section">
+                    <h3>⚡ Was gemessen wird</h3>
+                    <p>Die elektrische Leitfähigkeit (EC) ist ein Maß für die Konzentration an gelösten Ionen in der Lösung. Diese steht in direktem Zusammenhang mit dem osmotischen Druck und damit der Wasseraufnahme der Pflanzen.</p>
+                    <ul>
+                        <li>Einheit: mS/cm oder µS/cm (1 mS/cm = 1000 µS/cm)</li>
+                        <li>Umrechnung in ppm (parts per million):
+                            <ul>
+                                <li>0.5-Faktor (USA, EU): 1 mS/cm = 500 ppm</li>
+                                <li>0.7-Faktor (USA/Hanna): 1 mS/cm = 700 ppm</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Relevanz</h3>
+                    <p>Der EC-Wert gibt keinen Hinweis auf das Nährstoffverhältnis, sondern nur auf die Ionenkonzentration insgesamt. Ein zu hoher EC hemmt Wasseraufnahme (Plasmolyse), ein zu niedriger limitiert das Wachstum.</p>
+                    <h3>Zielbereiche</h3>
+                    <table>
+                        <tr>
+                            <th>Phase</th>
+                            <th>EC (mS/cm)</th>
+                            <th>µS/cm</th>
+                            <th>ppm (0.5)</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Keimung</td>
+                            <td>0,2–0,4</td>
+                            <td>200–400</td>
+                            <td>100–200</td>
+                            <td>Minimale osmotische Belastung für zarte Zellwände</td>
+                        </tr>
+                        <tr>
+                            <td>Vegetativ</td>
+                            <td>0,8–1,4</td>
+                            <td>800–1400</td>
+                            <td>400–700</td>
+                            <td>Bedarf an N, K, Mg steigt, Zellaufbau intensiv</td>
+                        </tr>
+                        <tr>
+                            <td>Generativ</td>
+                            <td>1,4–2,0</td>
+                            <td>1400–2000</td>
+                            <td>700–1000</td>
+                            <td>Hoher P- und K-Bedarf für Blüte-/Fruchtbildung</td>
+                        </tr>
+                    </table>
+                    <h3>Abweichungen & Folgen</h3>
+                    <ul>
+                        <li>Zu hoher EC: Ionentoxizität, Wurzeldehydrierung, gestörte Kationenaufnahme</li>
+                        <li>Zu niedriger EC: Wachstumsverzögerung, stickstoffbedingte Chlorosen</li>
+                    </ul>
+                    <h3>Empfehlungen</h3>
+                    <ul>
+                        <li>Immer Zieldüngung vs. Drain-EC vergleichen</li>
+                        <li>Bei EC-Drift: entweder Lösung austauschen oder mit 0-EC-Wasser (z. B. Osmose) verdünnen</li>
+                        <li>Leitfähigkeitsmessung bei konstanter Temperatur (20–25 °C), da EC temperaturabhängig ist</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('temperatureSection')">Wassertemperatur <span class="arrow">▼</span></label>
+                <div id="temperatureSection" class="sub-section">
+                    <h3>🌡️ Was gemessen wird</h3>
+                    <p>Die physikalische Temperatur (°C) des Nährmediums oder Reservoirs.</p>
+                    <h3>Relevanz</h3>
+                    <p>Wassertemperatur beeinflusst:</p>
+                    <ul>
+                        <li>Stoffwechselaktivität der Wurzeln (Enzymreaktionen → Temperaturkoeffizient Q10)</li>
+                        <li>Sauerstofflöslichkeit (sinkend bei steigender Temp.)</li>
+                        <li>Mikrobielles Gleichgewicht (Pathogene vs. nützliche Flora)</li>
+                    </ul>
+                    <h3>Zielbereiche</h3>
+                    <table>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Temperatur</th>
+                            <th>Hintergrund</th>
+                        </tr>
+                        <tr>
+                            <td>Keimung</td>
+                            <td>22–24 °C</td>
+                            <td>Wärme beschleunigt Zellteilung, verhindert Latenz</td>
+                        </tr>
+                        <tr>
+                            <td>Vegetativ</td>
+                            <td>20–22 °C</td>
+                            <td>Gute Balance aus O₂-Bindung und metabolischer Aktivität</td>
+                        </tr>
+                        <tr>
+                            <td>Generativ</td>
+                            <td>18–21 °C</td>
+                            <td>Leicht kühlere Wurzelzone verbessert Produktqualität, reduziert Infektionsrisiken</td>
+                        </tr>
+                    </table>
+                    <h3>Abweichungen & Folgen</h3>
+                    <ul>
+                        <li>>24 °C: Sauerstoffgehalt sinkt exponentiell → Wurzelstress, Pathogene (Pythium, Fusarium)</li>
+                        <li><17 °C: Wachstumsverlangsamung, reduzierte Aufnahme von N und P</li>
+                    </ul>
+                    <h3>Empfehlungen</h3>
+                    <ul>
+                        <li>Kontinuierliche Überwachung, nicht punktuell</li>
+                        <li>Aktive Temperaturkontrolle: Kühlspiralen, Heizstäbe, Isolierung</li>
+                        <li>In tiefen Systemen (RDWC): ggf. Rezirkulations- und Kühlmodule</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('oxygenSection')">Gelöster Sauerstoff (DO) <span class="arrow">▼</span></label>
+                <div id="oxygenSection" class="sub-section">
+                    <h3>🫧 Was gemessen wird</h3>
+                    <p>Der Gehalt an molekularem Sauerstoff (O₂) in der Nährlösung, in mg/L. Die Sauerstofflöslichkeit nimmt mit steigender Temperatur und steigender Ionenstärke (EC) ab.</p>
+                    <h3>Relevanz</h3>
+                    <ul>
+                        <li>Sauerstoff ist essentiell für aerobe Zellatmung in den Wurzeln</li>
+                        <li>Fehlt O₂ → anaerobe Bedingungen → Ethanolbildung, Zelltod, Pathogenproliferation</li>
+                        <li>Besonders kritisch in DWC, NFT, Aero-Systemen mit freihängenden Wurzeln</li>
+                    </ul>
+                    <h3>Zielbereiche</h3>
+                    <table>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Zielwert DO (mg/L)</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Keimung</td>
+                            <td>> 6,0</td>
+                            <td>Gasaustausch durch geringe Wurzelmasse limitiert – Umgebung entscheidend</td>
+                        </tr>
+                        <tr>
+                            <td>Vegetativ</td>
+                            <td>> 6,5</td>
+                            <td>Hohe O₂-Versorgung unterstützt energiereiches Zellwachstum</td>
+                        </tr>
+                        <tr>
+                            <td>Generativ</td>
+                            <td>> 7,0</td>
+                            <td>Hochleistungsstoffwechsel in späten Phasen → maximale Atmungsrate notwendig</td>
+                        </tr>
+                    </table>
+                    <h3>Abweichungen & Folgen</h3>
+                    <ul>
+                        <li>< 5 mg/L: Suboptimale Wurzelatmung → reduzierte Nährstoffaufnahme, Pathogenrisiko steigt</li>
+                        <li>< 4 mg/L: Wurzelnekrosen, verstärkter anaerober Stoffwechsel (Milchsäure, Buttersäure)</li>
+                    </ul>
+                    <h3>Empfehlungen</h3>
+                    <ul>
+                        <li>Belüftung über Luftsteine (porös, feinblasig) mit ≥ 1 L Luft/min je Pflanze</li>
+                        <li>Optional: mechanische Umwälzung oder Oberflächenverwirbelung</li>
+                        <li>In sterilen Systemen: O₂-Messung mit optischem oder polarographischem Sensor</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -282,6 +475,14 @@
                 }
             });
         });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
     </script>
 </body>
 </html>
