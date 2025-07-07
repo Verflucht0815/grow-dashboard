@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -220,13 +181,13 @@
             margin-bottom: 5px;
         }
         .nutrient-image {
-            margin: 10px 0;
+            margin-bottom: 10px;
             text-align: center;
         }
         .nutrient-image img {
             max-width: 100%;
-            height: auto;
-            max-height: 150px;
+            width: auto;
+            max-height: 225px;
             border-radius: 5px;
             border: 1px solid #4a5657;
         }
@@ -273,7 +234,7 @@
                 font-size: 0.8em;
             }
             .nutrient-image img {
-                max-height: 100px;
+                max-height: 150px;
             }
         }
     </style>
@@ -520,49 +481,302 @@
                         <label onclick="toggleSection('eisenDetails')">Eisen (Fe) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="eisenDetails"></div>
                         <div id="eisenDetails" class="nutrient-details">
-                            <p>Details zu Eisen (Fe) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Eisen ist ein essentielles Spurenelement und spielt eine Schlüsselrolle in der Chlorophyllsynthese, obwohl es nicht Bestandteil des Chlorophyllmoleküls ist. Es ist notwendig für:</p>
+                            <ul>
+                                <li>Die Aktivität von Redox-Enzymen (z. B. Ferredoxine, Cytochrome)</li>
+                                <li>Den Elektronentransport in der Photosynthese</li>
+                                <li>Die Atmungskette in Mitochondrien</li>
+                                <li>Die Bildung von DNA, RNA und Proteinen</li>
+                            </ul>
+                            <p>Eisen ist in der Pflanze nicht mobil, d. h. Mangel zeigt sich zuerst an den jüngsten Triebspitzen und Blättern.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Typisch ist eine interkostale Chlorose junger Blätter: Die Blattflächen zwischen den Adern vergilben, während die Adern selbst grün bleiben.</li>
+                                <li>Fortschreitender Mangel führt zu nahezu weißlichen Blättern (vollständige Chlorose), oft papierartig dünn und schwach ausgebildet.</li>
+                                <li>In schweren Fällen kommt es zur Wachstumsverlangsamung, reduzierter Photosyntheseleistung, verringerter Knospenbildung und geschwächter Abwehrkraft.</li>
+                                <li>Der pH-Wert ist ein kritischer Faktor: Bereits bei pH > 6,5 in Hydro oder > 7,0 in Erde wird Eisen zunehmend unlöslich – obwohl genug im Substrat vorhanden ist, kann es nicht aufgenommen werden.</li>
+                                <li>Fe-Mangel tritt besonders oft bei Verwendung von kalkreichem Wasser, hohem Phosphorgehalt (Fe-Blockade) oder in sterilen Hydroponiksystemen auf.</li>
+                                <li>Auch hohe Manganwerte können die Eisenaufnahme hemmen (Kompetitive Hemmung).</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Eisenbedarf ist gering, aber essentiell für junge Gewebe. Bereits kleine Schwankungen in pH oder Antagonisten können Mangel auslösen.</li>
+                                <li>In Erde sollte der pH zwischen 6,0–6,5, in Hydro zwischen 5,5–6,2 liegen.</li>
+                                <li>Bei sichtbarem Mangel:
+                                    <ul>
+                                        <li>Sofort pH überprüfen und korrigieren</li>
+                                        <li>Eisenchelat (EDDHA für Erde, DTPA oder EDTA für Hydro) einsetzen</li>
+                                        <li>Keine phosphorreichen Dünger gleichzeitig verwenden</li>
+                                    </ul>
+                                </li>
+                                <li>Gießwasser prüfen: Bei pH über 7,0 oder sehr hohem Bikarbonatgehalt besteht Risiko für Eisenblockade → evtl. ansäuern.</li>
+                                <li>Eisen ist besonders in Frühphasen, jungen Stecklingen und während Stressbedingungen kritisch – vorbeugend geringe Mengen chelatisiertes Fe mitführen.</li>
+                                <li>Blattdüngung mit Eisenchelat kann Symptome kurzfristig lindern, ersetzt aber keine Systemkorrektur.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="nutrient-section">
                         <label onclick="toggleSection('zinkDetails')">Zink (Zn) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="zinkDetails"></div>
                         <div id="zinkDetails" class="nutrient-details">
-                            <p>Details zu Zink (Zn) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Zink ist ein Mikronährstoff, aber funktionell von großer Bedeutung. Es wird benötigt für:</p>
+                            <ul>
+                                <li>Die Funktion von über 300 Enzymen</li>
+                                <li>Die DNA-Transkription (Zinkfingerproteine)</li>
+                                <li>Die Auxinbildung (Wachstumshormon)</li>
+                                <li>Die Zellstreckung und die Bildung von Blüten und Trichomen</li>
+                            </ul>
+                            <p>Zink ist mäßig mobil – in frühen Stadien kann es bei Mangel lokal umverteilt werden, aber meist zeigen sich Symptome an jüngeren Blättern.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Erstes Anzeichen: Junge Blätter zeigen eine interveinale Chlorose, meist kombiniert mit kleinbleibenden, eng anliegenden Blättern („Rosettenbildung“).</li>
+                                <li>Oft erscheinen die Blattflächen verformt, ledrig, glänzend oder verdreht.</li>
+                                <li>Triebspitzen können abbrechen oder sehr dicht wachsen → „Bonsai-Effekt“.</li>
+                                <li>Bei längerem Mangel entstehen nekrotische Blattflecken an den Rändern oder zwischen den Adern.</li>
+                                <li>Blüteprobleme sind häufig: Reduzierte Knospenbildung, schwache Trichom-Ausbildung und veränderte Internodienlänge.</li>
+                                <li>Zinkmangel tritt oft auf bei:
+                                    <ul>
+                                        <li>Zu hohem pH-Wert (über 6,8 in Erde / 6,2 in Hydro)</li>
+                                        <li>Überdüngung mit Phosphor oder Kupfer (Antagonismus)</li>
+                                        <li>Kalkhaltigem Substrat / Wasser</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Zielkonzentration im Substrat: etwa 0,05–0,1 mg/L frei verfügbares Zn (als Zn²⁺ oder Chelat).</li>
+                                <li>pH-Wert anpassen:
+                                    <ul>
+                                        <li>Erde: Zielwert 6,0–6,5</li>
+                                        <li>Hydroponik: Ziel 5,5–6,0</li>
+                                    </ul>
+                                </li>
+                                <li>Bei Mangel:
+                                    <ul>
+                                        <li>Verwendung eines Zinkchelatdüngers (EDTA-Zn oder DTPA-Zn)</li>
+                                        <li>Kombination mit leichter Blattdüngung zur Überbrückung</li>
+                                    </ul>
+                                </li>
+                                <li>Stark zinkzehrende Substrate (z. B. frische Cocos) sollten mit Zn vorkonditioniert werden.</li>
+                                <li>Vermeide hohen Phosphorgehalt im Gießwasser bei gleichzeitigem Zn-Mangel.</li>
+                                <li>In empfindlichen Sorten kann ein leichter Zn-Mangel bereits die Knospenbildung unterdrücken – besonders in der Vorblüte auf ausreichende Versorgung achten.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="nutrient-section">
                         <label onclick="toggleSection('manganDetails')">Mangan (Mn) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="manganDetails"></div>
                         <div id="manganDetails" class="nutrient-details">
-                            <p>Details zu Mangan (Mn) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Mangan ist ein essentielles Spurenelement, das in Pflanzen primär als Kofaktor für Enzyme dient. Es ist unersetzlich für:</p>
+                            <ul>
+                                <li>Die Wasseroxidation im Photosystem II (PSII) – der Prozess, der Sauerstoff bei der Photosynthese freisetzt</li>
+                                <li>Den Stickstoff- und Kohlenhydratstoffwechsel</li>
+                                <li>Die Synthese aromatischer Aminosäuren</li>
+                                <li>Die Chloroplastenentwicklung und Zellteilung</li>
+                            </ul>
+                            <p>Mangan ist mäßig mobil – bei Mangel zeigen sich Symptome meist an mittelalten bis jungen Blättern.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Erste Symptome: Interkostale Chlorose, beginnend auf jüngeren Blättern, aber oft sichtbar an der Blattmitte nach außen hin.</li>
+                                <li>Die Adern bleiben zunächst grün, während das Gewebe zwischen den Adern gelblich wird – dabei wirkt das Muster oft fleckig oder marmoriert.</li>
+                                <li>In schweren Fällen entwickeln sich braune Punkte (Nekrosen), besonders entlang der Blattadern.</li>
+                                <li>Fortschreitender Mangel führt zu:
+                                    <ul>
+                                        <li>Verringerter Photosynthese</li>
+                                        <li>Langsamerem Wachstum</li>
+                                        <li>Schlechter Wurzelentwicklung</li>
+                                        <li>Reduzierter Knospenbildung</li>
+                                    </ul>
+                                </li>
+                                <li>Manganmangel tritt häufig auf, wenn:
+                                    <ul>
+                                        <li>Der pH-Wert über 6,5 (Erde) bzw. 6,2 (Hydro) liegt</li>
+                                        <li>Zu viel Eisen oder Zink im Substrat vorhanden ist (antagonistische Wirkung)</li>
+                                        <li>Die Wurzelumgebung stark belüftet oder alkalisch ist (z. B. bei stark kalkhaltigen Böden)</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimaler Mn-Gehalt im Nährmedium: 0,05–0,2 mg/L, abhängig von Substrat und Phase.</li>
+                                <li>Wichtig: Manganaufnahme ist sehr pH-abhängig – bei zu hohem pH wird Mn rasch unlöslich.</li>
+                                <li>Bei sichtbarem Mangel:
+                                    <ul>
+                                        <li>pH auf 6,0–6,5 in Erde bzw. 5,5–6,0 in Hydro absenken</li>
+                                        <li>Mangan gezielt zuführen (z. B. als Mn-EDTA oder MnSO₄)</li>
+                                    </ul>
+                                </li>
+                                <li>Blattdüngung mit Mangan kann kurzfristig helfen, ersetzt aber keine Substratkorrektur.</li>
+                                <li>Überschuss ist selten, aber bei zu hohen Werten (z. B. durch Leitungswasser mit Eisen/Mn-Kombination) kann Mangan toxisch werden → manifestiert sich durch schwarze Nekrosen an Wurzelspitzen und Blättern.</li>
+                                <li>Mangan-Status ist besonders kritisch während der Vegetationsphase, wenn die Pflanze aktiv Chloroplasten aufbaut und Wurzeln ausbildet.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="nutrient-section">
                         <label onclick="toggleSection('kupferDetails')">Kupfer (Cu) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="kupferDetails"></div>
                         <div id="kupferDetails" class="nutrient-details">
-                            <p>Details zu Kupfer (Cu) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Kupfer ist ein essentieller Bestandteil vieler Redox-Enzyme und ist beteiligt an:</p>
+                            <ul>
+                                <li>Der Atmungskette (Cytochrom-c-Oxidase)</li>
+                                <li>Der Ligninbildung (Zellwandverfestigung)</li>
+                                <li>Der Photosynthese (Plastocyanin)</li>
+                                <li>Der Samen- und Blütenentwicklung</li>
+                                <li>Der Abwehr gegen Pathogene (z. B. durch Peroxidasen)</li>
+                            </ul>
+                            <p>Kupfer ist in der Pflanze wenig mobil, daher treten Mangelerscheinungen primär an jungen Blättern und Triebspitzen auf.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Frühe Anzeichen: Schlaffe, leicht welke junge Blätter, oft mit blassgrüner bis bläulicher Tönung.</li>
+                                <li>Mit fortschreitendem Mangel:
+                                    <ul>
+                                        <li>Verdrehte, eingerollte oder gekräuselte Blätter</li>
+                                        <li>Nekrosen an Triebspitzen</li>
+                                        <li>Deformierte oder abgestorbene Triebe</li>
+                                    </ul>
+                                </li>
+                                <li>Die Pflanze wirkt insgesamt gestaucht, oft mit gestörtem Apikalwachstum.</li>
+                                <li>In der Blütephase führt Cu-Mangel zu:
+                                    <ul>
+                                        <li>Schwacher Blütenbildung</li>
+                                        <li>Mangel an Trichomen</li>
+                                        <li>Geringem Harzgehalt</li>
+                                    </ul>
+                                </li>
+                                <li>Ursachen für Kupfermangel:
+                                    <ul>
+                                        <li>Hoher pH-Wert (>6,8) → Kupfer wird unlöslich gebunden</li>
+                                        <li>Hohe Phosphor-, Zink- oder Eisenwerte → hemmen Cu-Aufnahme</li>
+                                        <li>Sterile Substrate oder Osmosewasser ohne Spurenelementzugabe</li>
+                                    </ul>
+                                </li>
+                                <li>Vorsicht: Kupfer ist schnell toxisch, daher ist Überdosierung deutlich gefährlicher als ein kurzfristiger Mangel.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Kupferbedarf liegt im Bereich von 0,005–0,02 mg/L – extrem gering, aber kritisch.</li>
+                                <li>Bei Mangel:
+                                    <ul>
+                                        <li>pH-Wert kontrollieren → Ziel: 6,0–6,5 (Erde), 5,5–6,0 (Hydro)</li>
+                                        <li>Blattdüngung mit Cu-EDTA (vorsichtig dosieren)</li>
+                                        <li>In Hydro- oder Osmosebetrieb regelmäßig Mikronährstoffmix zuführen (A+B-Dünger oder Mikro-Komplexe)</li>
+                                    </ul>
+                                </li>
+                                <li>Kupferüberschuss vermeiden – schon leicht erhöhte Cu-Werte blockieren Wurzelwachstum und schädigen Mikroorganismen im Substrat.</li>
+                                <li>Bei Symptomen wie Triebnekrosen, Blattverkrüppelung oder starkem Wachstumsstopp → Cu-Mangel mit Blattdüngung beheben und Wurzelversorgung stabilisieren.</li>
+                                <li>Idealerweise erfolgt die Kupfergabe stets komplexiert oder chelatisiert, da freies Cu²⁺ in Lösung sehr reaktiv und phytotoxisch sein kann.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="nutrient-section">
                         <label onclick="toggleSection('borDetails')">Bor (B) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="borDetails"></div>
                         <div id="borDetails" class="nutrient-details">
-                            <p>Details zu Bor (B) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Bor ist ein essentielles Spurenelement, das vor allem in der Zellwandstabilisierung, im Zellteilungsprozess und bei der Signalweiterleitung innerhalb der Pflanze eine Rolle spielt. Es beeinflusst:</p>
+                            <ul>
+                                <li>Die Vernetzung von Pektinen in der Zellwand</li>
+                                <li>Die Aufnahme und Umverteilung von Kalzium</li>
+                                <li>Die Bildung neuer Triebe, Wurzelspitzen und Blüten</li>
+                                <li>Den Transport von Zuckern und Auxinen</li>
+                            </ul>
+                            <p>Bor ist nicht oder nur sehr gering mobil in Cannabis – bei Mangel zeigen sich Symptome deshalb zuerst an den Wuchs- und Blütenspitzen.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Frühe Symptome:
+                                    <ul>
+                                        <li>Verzögerter Haupttrieb (Verkümmerung der Triebspitze)</li>
+                                        <li>Verdickte, glasige oder missgebildete Jungblätter</li>
+                                        <li>Die jungen Blätter wirken oft rissig, starr oder geschwollen, gelegentlich mit verkorkten Stellen.</li>
+                                    </ul>
+                                </li>
+                                <li>Fortgeschrittener Mangel:
+                                    <ul>
+                                        <li>Triebspitzen können absterben</li>
+                                        <li>Die Blütenbildung ist unvollständig, oft mit offenen oder deformierten Kelchen</li>
+                                        <li>In schweren Fällen bleiben Buds klein und leer</li>
+                                    </ul>
+                                </li>
+                                <li>Wurzeln reagieren mit verminderter Verzweigung, reduziertem Haarwurzelwachstum und schlechter Nährstoffaufnahme.</li>
+                                <li>Typische Auslöser:
+                                    <ul>
+                                        <li>Hoher pH (>6,8) → Bor liegt nicht mehr pflanzenverfügbar vor</li>
+                                        <li>Trockene Substrate oder schlechte Wasserverteilung → Bor wird kaum bewegt (es wandert nur im Wasserfilm)</li>
+                                        <li>Stark filtriertes Wasser ohne Borzugabe (z. B. Osmose)</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimale Borgehalte im Gießwasser: 0,3–0,6 mg/L</li>
+                                <li>Bor wird fast ausschließlich über die Wurzel mit dem Transpirationsstrom aufgenommen – gleichmäßige Feuchtigkeit ist entscheidend.</li>
+                                <li>Bei Mangel:
+                                    <ul>
+                                        <li>pH-Wert senken (Ziel: 6,0–6,5 in Erde / 5,5–6,0 in Hydro)</li>
+                                        <li>Bor gezielt zuführen, z. B. als Natriumborat oder über Spurenelementmischungen</li>
+                                    </ul>
+                                </li>
+                                <li>Blattdüngung mit Bor ist nicht effektiv, da Bor kaum durch Blattgewebe transportiert wird – Wurzelversorgung ist zwingend.</li>
+                                <li>Bor reagiert empfindlich auf Trockenstress, Salzstress und Kalziummangel – diese Faktoren gemeinsam vermeiden.</li>
+                                <li>Borüberschuss ist ebenfalls möglich, führt dann zu Blattverformungen, Korkflecken, Triebsterben – sehr niedrige Zielbereiche genau einhalten.</li>
+                                <li>Vorbeugend sinnvoll bei Hydro/Osmose: regelmäßige Gabe einer Mikrokomplexmischung mit Boranteil.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="nutrient-section">
                         <label onclick="toggleSection('molybdaenDetails')">Molybdän (Mo) <span class="arrow">▼</span></label>
                         <div class="nutrient-image" data-nutrient-id="molybdaenDetails"></div>
                         <div id="molybdaenDetails" class="nutrient-details">
-                            <p>Details zu Molybdän (Mo) folgen hier...</p>
-                        </div>
-                    </div>
-                    <div class="nutrient-section">
-                        <label onclick="toggleSection('chlorDetails')">Chlor (Cl) (selten kritisch) <span class="arrow">▼</span></label>
-                        <div class="nutrient-image" data-nutrient-id="chlorDetails"></div>
-                        <div id="chlorDetails" class="nutrient-details">
-                            <p>Details zu Chlor (Cl) folgen hier...</p>
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Molybdän ist mengenmäßig das seltenste essentielle Element, aber von großer Bedeutung. Es ist Bestandteil von Enzymen, die den Stickstoffstoffwechsel regulieren, insbesondere:</p>
+                            <ul>
+                                <li>Die Nitratreduktase, die NO₃⁻ in NH₄⁺ umwandelt</li>
+                                <li>Die Nitrogenase (in stickstofffixierenden Bakterien)</li>
+                                <li>Die Synthetisierung von Purinen und Hormonen</li>
+                            </ul>
+                            <p>Cannabis benötigt extrem geringe Mengen an Mo, aber ein Mangel behindert die Stickstoffverwertung, was selbst bei ausreichend Nährstoff zu Mangelerscheinungen führt.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Symptome ähneln einem Stickstoffmangel, trotz ausreichender N-Versorgung:
+                                    <ul>
+                                        <li>Vergilbte mittlere bis ältere Blätter</li>
+                                        <li>Abnehmende Blattgröße</li>
+                                        <li>Langsames, gestauchtes Wachstum</li>
+                                    </ul>
+                                </li>
+                                <li>In späteren Stadien:
+                                    <ul>
+                                        <li>Blattränder werden bräunlich, manchmal eingerollt</li>
+                                        <li>Internodien werden sehr kurz, Blütenbildung bleibt zurück</li>
+                                        <li>Die Pflanze wirkt schwach, chlorotisch und kränklich</li>
+                                    </ul>
+                                </li>
+                                <li>Ursachen:
+                                    <ul>
+                                        <li>Hauptsächlich pH-Probleme: Mo wird bei zu saurem pH (<5,5) kaum aufgenommen</li>
+                                        <li>Osmosewasser ohne Mikroergänzung</li>
+                                        <li>Molybdänkonkurrenz durch hohe Schwefel- oder Eisenmengen</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Zielwert im Gießwasser: 0,01–0,05 mg/L</li>
+                                <li>Molybdän wird bei pH-Werten unter 5,5 schlecht verfügbar → pH-Kontrolle ist hier besonders entscheidend.</li>
+                                <li>Bei Mangel:
+                                    <ul>
+                                        <li>pH-Wert leicht anheben, insbesondere in Hydro (Ziel: 5,8–6,2)</li>
+                                        <li>Zugabe eines kompletten Mikronährstoffpakets, das auch Mo enthält</li>
+                                        <li>In Erde: Mangel meist über längere Zeit, selten akut – bei typischer Stickstoffmangelsymptomatik trotz guter Düngung an Mo denken</li>
+                                    </ul>
+                                </li>
+                                <li>Mo ist nicht toxisch in leicht erhöhten Konzentrationen, da Cannabis eine gute Regulation besitzt – aber übermäßige Eisen- oder Schwefelgaben können die Aufnahme blockieren.</li>
+                                <li>Nicht einzeln, sondern nur als Teil einer ausgewogenen Mikronährstoffmischung verwenden – Überdosierung vermeiden.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -583,8 +797,7 @@
             'manganDetails': 'mangan.jpg',
             'kupferDetails': 'kupfer.jpg',
             'borDetails': 'bor.jpg',
-            'molybdaenDetails': 'molybdaen.jpg',
-            'chlorDetails': 'chlor.jpg'
+            'molybdaenDetails': 'molybdaen.jpg'
         };
 
         // Toggle dropdown on touch or click for mobile devices
@@ -612,8 +825,8 @@
             const arrow = label.querySelector('.arrow');
             arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
 
-            // Handle image loading for main sections (macroSection, microSection)
-            if (sectionId === 'macroSection' || sectionId === 'microSection') {
+            // Handle image loading for nutrient sections
+            if (section.id === 'macroSection' || section.id === 'microSection') {
                 const nutrientSections = section.querySelectorAll('.nutrient-section');
                 nutrientSections.forEach(nutrientSection => {
                     const imageContainer = nutrientSection.querySelector('.nutrient-image');
@@ -621,9 +834,11 @@
                     const nutrientName = nutrientSection.querySelector('label').textContent.split(' ')[0];
                     if (section.classList.contains('active')) {
                         const imageFile = nutrientImages[nutrientId];
+                        console.log(`Lade Bild für ${nutrientName}: ${imageFile}`); // Debugging
                         if (imageFile) {
-                            imageContainer.innerHTML = `<img src="${imageFile}" alt="${nutrientName} Mangelerscheinung" onerror="this.parentElement.innerHTML='<p>Bild für ${nutrientName} nicht verfügbar</p>'">`;
+                            imageContainer.innerHTML = `<img src="${imageFile}" alt="${nutrientName} Mangelerscheinung" onerror="this.parentElement.innerHTML='<p>Bild für ${nutrientName} nicht verfügbar</p>'; console.log('Fehler beim Laden von ${imageFile}');">`;
                         } else {
+                            console.log(`Kein Bild definiert für ${nutrientId}`); // Debugging
                             imageContainer.innerHTML = `<p>Bild für ${nutrientName} nicht verfügbar</p>`;
                         }
                     } else {
@@ -633,15 +848,17 @@
             }
 
             // Close other nutrient details in the same category
-            const siblingSections = section.parentElement.parentElement.querySelectorAll('.nutrient-section .nutrient-details');
-            siblingSections.forEach(sibling => {
-                if (sibling.id !== sectionId && sibling.classList.contains('active')) {
-                    sibling.classList.remove('active');
-                    const siblingLabel = sibling.parentElement.querySelector('label');
-                    const siblingArrow = siblingLabel.querySelector('.arrow');
-                    siblingArrow.textContent = '▼';
-                }
-            });
+            if (section.classList.contains('nutrient-details')) {
+                const siblingSections = section.parentElement.parentElement.querySelectorAll('.nutrient-section .nutrient-details');
+                siblingSections.forEach(sibling => {
+                    if (sibling.id !== sectionId && sibling.classList.contains('active')) {
+                        sibling.classList.remove('active');
+                        const siblingLabel = sibling.parentElement.querySelector('label');
+                        const siblingArrow = siblingLabel.querySelector('.arrow');
+                        siblingArrow.textContent = '▼';
+                    }
+                });
+            }
         }
     </script>
 </body>
