@@ -1,0 +1,867 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Controller - Lüftung</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #1c2526;
+            margin: 0;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #2ecc71;
+            font-size: 2.5em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .nav {
+            background-color: #2f3b3c;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        .nav li {
+            position: relative;
+        }
+        .nav a {
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            display: block;
+            transition: color 0.2s;
+        }
+        .nav a:hover {
+            color: #27ae60;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #252f30;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .dropdown-content a {
+            color: #2ecc71;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9em;
+            flex: 1 1 45%;
+            text-align: center;
+        }
+        .dropdown-content a:hover {
+            background-color: #1c2526;
+            color: #27ae60;
+        }
+        .dropdown:hover .dropdown-content,
+        .dropdown.touched .dropdown-content {
+            display: flex;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2f3b3c;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .container h2 {
+            color: #2ecc71;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
+        }
+        .data label {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label.slider-label {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .data label .toggle-indicator {
+            margin-left: 10px;
+            font-size: 1em;
+            color: #2ecc71;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .data .values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .data .values div {
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .data .values span {
+            font-size: 1em;
+            display: block;
+        }
+        .data .values .inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .input-container {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .input-container input[type="number"],
+        .input-container select {
+            background-color: #1c2526;
+            color: #e0e0e0;
+            border: 1px solid #4a5657;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .input-container select {
+            max-width: 100px;
+        }
+        .input-container input[type="range"] {
+            width: 100%;
+            background: #4a5657;
+            border-radius: 5px;
+            height: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .input-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .input-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .input-container button {
+            background-color: #2ecc71;
+            color: #1c2526;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .input-container button:hover {
+            background-color: #27ae60;
+        }
+        .input-container button.active {
+            background-color: #27ae60;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .status-indicator.on {
+            background-color: #2ecc71;
+        }
+        .status-indicator.off {
+            background-color: #e74c3c;
+        }
+        .percent-indicator {
+            margin-left: 10px;
+            font-size: 1em;
+            color: #2ecc71;
+        }
+        .co2-range-text {
+            display: inline-block;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+        .co2-range-text.green {
+            color: #2ecc71;
+        }
+        .co2-range-text.yellow {
+            color: #f1c40f;
+        }
+        .co2-range-text.red {
+            color: #e74c3c;
+        }
+        .input-container label.checkbox-label {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            color: #e0e0e0;
+            width: 100%;
+        }
+        .input-container input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .co2-graph-container {
+            max-width: 100%;
+            height: 200px;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            .nav ul {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }
+            .nav li {
+                flex: 1;
+                text-align: center;
+            }
+            .nav a {
+                font-size: 0.9em;
+                padding: 8px 5px;
+            }
+            .dropdown-content {
+                min-width: 100%;
+                max-width: 100%;
+                left: 0;
+                transform: none;
+                padding: 5px;
+            }
+            .dropdown-content a {
+                font-size: 0.8em;
+                padding: 6px 8px;
+                flex: 1 1 48%;
+            }
+            .data .values div,
+            .input-container input,
+            .input-container select,
+            .input-container button,
+            .input-container label.checkbox-label,
+            .input-container label.slider-label {
+                width: 100%;
+            }
+            .input-container select {
+                max-width: 80px;
+            }
+            .input-container .status-indicator,
+            .input-container .co2-range-text,
+            .input-container .percent-indicator {
+                margin-left: 5px;
+            }
+            .co2-graph-container {
+                height: 150px;
+            }
+        }
+    </style>
+    <div class="header">
+        <h1>Grow Controller</h1>
+    </div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2>Lüftungssteuerung</h2>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('manualSection')">Manuelle Steuerung <span class="toggle-indicator">▼</span></label>
+                <div id="manualSection" class="sub-section active">
+                    <div class="input-container">
+                        <div>
+                            <label class="slider-label">Lüfter Leistung<input type="range" id="fanSpeedInput" value="50" min="0" max="100" step="1" oninput="updateFanSpeed()"></label>
+                            <span class="percent-indicator" id="fanSpeedPercent">50%</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <button id="autoButton" onclick="toggleAutoMode()">Automatik ein/aus</button>
+                            <span class="status-indicator off" id="autoIndicator"></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button id="exhaustButton" onclick="toggleVentilation('exhaust')">Abluft An/Aus</button>
+                            <span class="status-indicator off" id="exhaustIndicator"></span>
+                            <select id="exhaustMode" onchange="updateVentilationMode('exhaust')">
+                                <option value="440">440 m³/h</option>
+                                <option value="880">880 m³/h</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <button id="intakeButton" onclick="toggleVentilation('intake')">Zuluft An/Aus</button>
+                                <span class="status-indicator off" id="intakeIndicator"></span>
+                            </div>
+                            <label class="slider-label">Zuluft Leistung<input type="range" id="intakeSpeedInput" value="50" min="0" max="100" step="1" oninput="updateIntakeSpeed()"></label>
+                            <span class="percent-indicator" id="intakeSpeedPercent">50%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('climateSection')">Zielwerte (Automatik) <span class="toggle-indicator">▼</span></label>
+                <div id="climateSection" class="sub-section active">
+                    <div class="values">
+                        <div><span id="currentTemp">Aktuelle Temperatur: -- °C</span></div>
+                        <div><span id="currentHumidity">Aktuelle Luftfeuchtigkeit: -- %</span></div>
+                        <div><span id="currentVPD">Aktueller VPD: -- kPa</span></div>
+                    </div>
+                    <div class="input-container">
+                        <label>Min. Temperatur (°C): <input type="number" id="minTemp" value="18" min="10" max="30" step="1" oninput="updateClimateSettings()"></label>
+                        <label>Max. Temperatur (°C): <input type="number" id="maxTemp" value="25" min="10" max="30" step="1" oninput="updateClimateSettings()"></label>
+                        <label>Min. Luftfeuchtigkeit (%): <input type="number" id="minHumidity" value="40" min="20" max="80" step="1" oninput="updateClimateSettings()"></label>
+                        <label>Max. Luftfeuchtigkeit (%): <input type="number" id="maxHumidity" value="60" min="20" max="80" step="1" oninput="updateClimateSettings()"></label>
+                        <label>Zielwert VPD (kPa): <input type="number" id="targetVPD" value="1.2" min="0.5" max="2.0" step="0.1" oninput="updateClimateSettings()"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('condensationSection')">Kondenswasser-Erkennung <span class="toggle-indicator">▼</span></label>
+                <div id="condensationSection" class="sub-section">
+                    <div class="values">
+                        <div><span id="condensationStatus">Kondenswasser: Nicht erkannt</span></div>
+                    </div>
+                    <div class="input-container">
+                        <label>Kondenswasser-Schwelle (%): <input type="number" id="condensationThreshold" value="80" min="50" max="100" step="1" oninput="updateClimateSettings()"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('co2Section')">CO₂-Dünger-Modus <span class="status-indicator off" id="co2Indicator"></span> <span class="toggle-indicator">▼</span></label>
+                <div id="co2Section" class="sub-section">
+                    <div class="values">
+                        <div><span id="currentCO2">Aktueller Wert: 450 ppm</span></div>
+                        <div><span id="co2Average">Durchschnitt (24h): -- ppm</span></div>
+                        <div><span id="climateTemp">Temperatur: -- °C</span></div>
+                        <div><span id="climateHumidity">Luftfeuchtigkeit: -- %</span></div>
+                        <div><span id="co2VPD">VPD: -- kPa</span></div>
+                        <div class="inline"><span>Zielbereich:</span><span class="co2-range-text red" id="co2RangeText">Zu niedrig</span></div>
+                        <div><span id="co2Injections">CO₂-Einsätze pro Tag: 0</span></div>
+                    </div>
+                    <div class="input-container">
+                        <div style="display: flex; align-items: center;">
+                            <button id="co2Button" onclick="toggleCO2Mode()">CO₂-Modus ein/aus</button>
+                            <span class="status-indicator off" id="co2IndicatorDuplicate"></span>
+                        </div>
+                        <label>Zielwert-Einstellung (ppm): <input type="number" id="co2Target" value="1000" min="400" max="1500" step="10" oninput="updateCO2Settings()"></label>
+                        <label class="checkbox-label"><input type="checkbox" id="co2LightOnly" onchange="updateCO2Settings()"> Nur bei Licht aktivieren</label>
+                        <label>CO₂-Pause nach Injektion (Min): <input type="number" id="co2Pause" value="5" min="1" max="30" step="1" oninput="updateCO2Settings()"></label>
+                        <label>Betriebsmodus: <select id="co2ModeType" onchange="updateCO2Settings()">
+                            <option value="continuous">Dauerbetrieb</option>
+                            <option value="pulse">Stoßbetrieb</option>
+                        </select></label>
+                        <button onclick="calibrateCO2()">CO₂-Kalibrierung/Reset</button>
+                    </div>
+                    <div class="section">
+                        <label onclick="toggleSection('co2GraphSection')">CO₂-Verlauf (24h/7 Tage) <span class="toggle-indicator">▼</span></label>
+                        <div id="co2GraphSection" class="sub-section">
+                            <canvas id="co2Chart" class="co2-graph-container"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Initialize CO2 chart data
+        let co2Data = Array(24).fill(400); // Simulate 24 hours of CO2 data
+        let co2Data7Days = Array(7).fill(400); // Simulate 7 days of average CO2 data
+        let chartInstance = null;
+
+        // Initialize Chart.js
+        function initializeCO2Chart() {
+            const ctx = document.getElementById('co2Chart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [
+                        {
+                            label: 'CO₂ (ppm, 24h)',
+                            data: co2Data,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'CO₂ (ppm, 7 Tage Durchschnitt)',
+                            data: co2Data7Days.map(() => null), // Only show last 7 points
+                            borderColor: '#f1c40f',
+                            backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 300,
+                            max: 1600,
+                            title: { display: true, text: 'CO₂ (ppm)', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: '#4a5657' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Zeit', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: '#4a5657' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } }
+                    }
+                }
+            });
+        }
+
+        // Toggle dropdown on touch or click for navigation
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const dropbtn = dropdown.querySelector('.dropbtn');
+            dropbtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isTouched = dropdown.classList.contains('touched');
+                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
+                if (!isTouched) {
+                    dropdown.classList.add('touched');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('touched');
+                }
+            });
+        });
+
+        // Toggle section visibility for content dropdowns
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const indicator = section.parentElement.querySelector('label .toggle-indicator');
+            section.classList.toggle('active');
+            if (indicator) {
+                indicator.textContent = section.classList.contains('active') ? '▲' : '▼';
+            }
+        }
+
+        // Load saved values from localStorage
+        const savedMinTemp = localStorage.getItem('minTemp') || '18';
+        const savedMaxTemp = localStorage.getItem('maxTemp') || '25';
+        const savedMinHumidity = localStorage.getItem('minHumidity') || '40';
+        const savedMaxHumidity = localStorage.getItem('maxHumidity') || '60';
+        const savedTargetVPD = localStorage.getItem('targetVPD') || '1.2';
+        const savedCondensationThreshold = localStorage.getItem('condensationThreshold') || '80';
+        const savedCO2Pause = localStorage.getItem('co2Pause') || '5';
+        const savedCO2Target = localStorage.getItem('co2Target') || '1000';
+        const savedCO2LightOnly = localStorage.getItem('co2LightOnly') === 'true';
+        const savedCO2ModeType = localStorage.getItem('co2ModeType') || 'continuous';
+        const savedAutoMode = localStorage.getItem('autoMode') === 'true';
+        const savedCO2Mode = localStorage.getItem('co2Mode') === 'true';
+        const savedExhaustStatus = localStorage.getItem('exhaustStatus') || 'Aus';
+        const savedIntakeStatus = localStorage.getItem('intakeStatus') || 'Aus';
+        const savedExhaustMode = localStorage.getItem('exhaustMode') || '440';
+        const savedFanSpeed = localStorage.getItem('fanSpeed') || '50';
+        const savedIntakeSpeed = localStorage.getItem('intakeSpeed') || '50';
+
+        document.getElementById('minTemp').value = savedMinTemp;
+        document.getElementById('maxTemp').value = savedMaxTemp;
+        document.getElementById('minHumidity').value = savedMinHumidity;
+        document.getElementById('maxHumidity').value = savedMaxHumidity;
+        document.getElementById('targetVPD').value = savedTargetVPD;
+        document.getElementById('condensationThreshold').value = savedCondensationThreshold;
+        document.getElementById('co2Pause').value = savedCO2Pause;
+        document.getElementById('co2Target').value = savedCO2Target;
+        document.getElementById('co2LightOnly').checked = savedCO2LightOnly;
+        document.getElementById('co2ModeType').value = savedCO2ModeType;
+        document.getElementById('autoButton').classList.toggle('active', savedAutoMode);
+        document.getElementById('co2Button').classList.toggle('active', savedCO2Mode);
+        document.getElementById('exhaustIndicator').classList.toggle('on', savedExhaustStatus === 'An');
+        document.getElementById('exhaustIndicator').classList.toggle('off', savedExhaustStatus !== 'An');
+        document.getElementById('intakeIndicator').classList.toggle('on', savedIntakeStatus === 'An');
+        document.getElementById('intakeIndicator').classList.toggle('off', savedIntakeStatus !== 'An');
+        document.getElementById('autoIndicator').classList.toggle('on', savedAutoMode);
+        document.getElementById('autoIndicator').classList.toggle('off', !savedAutoMode);
+        document.getElementById('co2Indicator').classList.toggle('on', savedCO2Mode);
+        document.getElementById('co2Indicator').classList.toggle('off', !savedCO2Mode);
+        document.getElementById('co2IndicatorDuplicate').classList.toggle('on', savedCO2Mode);
+        document.getElementById('co2IndicatorDuplicate').classList.toggle('off', !savedCO2Mode);
+        document.getElementById('exhaustMode').value = savedExhaustMode;
+        document.getElementById('fanSpeedInput').value = savedFanSpeed;
+        document.getElementById('intakeSpeedInput').value = savedIntakeSpeed;
+        document.getElementById('fanSpeedPercent').textContent = `${savedFanSpeed}%`;
+        document.getElementById('intakeSpeedPercent').textContent = `${savedIntakeSpeed}%`;
+
+        // Simulate current climate data (placeholder, replace with API call)
+        function getCurrentClimate() {
+            const co2 = Math.floor(Math.random() * (1500 - 400 + 1)) + 400;
+            co2Data.shift();
+            co2Data.push(co2);
+            const avgCO2 = co2Data.reduce((a, b) => a + b, 0) / co2Data.length;
+            co2Data7Days.shift();
+            co2Data7Days.push(avgCO2);
+            return {
+                temperature: Math.floor(Math.random() * (30 - 15 + 1)) + 15,
+                humidity: Math.floor(Math.random() * (80 - 30 + 1)) + 30,
+                vpd: (Math.random() * (2.0 - 0.5) + 0.5).toFixed(1),
+                co2: co2,
+                co2Average: avgCO2.toFixed(0),
+                condensationDetected: Math.random() > 0.8,
+                lightOn: Math.random() > 0.5
+            };
+        }
+
+        // Update ventilation status
+        function updateVentilation() {
+            const climate = getCurrentClimate();
+            const minTemp = parseFloat(document.getElementById('minTemp').value) || 18;
+            const maxTemp = parseFloat(document.getElementById('maxTemp').value) || 25;
+            const minHumidity = parseFloat(document.getElementById('minHumidity').value) || 40;
+            const maxHumidity = parseFloat(document.getElementById('maxHumidity').value) || 60;
+            const targetVPD = parseFloat(document.getElementById('targetVPD').value) || 1.2;
+            const condensationThreshold = parseFloat(document.getElementById('condensationThreshold').value) || 80;
+            const co2Target = parseFloat(document.getElementById('co2Target').value) || 1000;
+            const co2LightOnly = document.getElementById('co2LightOnly').checked;
+            const co2ModeType = document.getElementById('co2ModeType').value;
+            const autoMode = localStorage.getItem('autoMode') === 'true';
+            const co2Mode = localStorage.getItem('co2Mode') === 'true';
+            const co2End = parseInt(localStorage.getItem('co2End')) || 0;
+            let exhaustStatus = localStorage.getItem('exhaustStatus') || 'Aus';
+            let intakeStatus = localStorage.getItem('intakeStatus') || 'Aus';
+            let fanSpeed = parseFloat(localStorage.getItem('fanSpeed') || 50);
+            let intakeSpeed = parseFloat(localStorage.getItem('intakeSpeed') || 50);
+            let co2Injections = parseInt(localStorage.getItem('co2Injections') || 0);
+
+            if (autoMode && co2End < Date.now()) {
+                if (co2Mode && (!co2LightOnly || climate.lightOn)) {
+                    exhaustStatus = 'Aus';
+                    intakeStatus = 'Aus';
+                    fanSpeed = 50;
+                    intakeSpeed = 50;
+                    if (climate.co2 < co2Target && co2ModeType === 'pulse') {
+                        co2Injections++;
+                        localStorage.setItem('co2Injections', co2Injections);
+                        const pauseMinutes = parseInt(document.getElementById('co2Pause').value) || 5;
+                        localStorage.setItem('co2End', Date.now() + pauseMinutes * 60 * 1000);
+                    }
+                } else {
+                    if (climate.temperature < minTemp || climate.humidity > maxHumidity || Math.abs(climate.vpd - targetVPD) > 0.2) {
+                        exhaustStatus = 'An';
+                        intakeStatus = 'An';
+                        fanSpeed = 70;
+                        intakeSpeed = 70;
+                    } else if (climate.temperature > maxTemp || climate.humidity < minHumidity) {
+                        exhaustStatus = 'Aus';
+                        intakeStatus = 'An';
+                        fanSpeed = 50;
+                        intakeSpeed = 50;
+                    } else {
+                        exhaustStatus = 'Aus';
+                        intakeStatus = 'Aus';
+                        fanSpeed = 30;
+                        intakeSpeed = 30;
+                    }
+                    if (climate.condensationDetected || climate.humidity >= condensationThreshold) {
+                        exhaustStatus = 'An';
+                        intakeStatus = 'An';
+                        fanSpeed = 80;
+                        intakeSpeed = 80;
+                    }
+                }
+                localStorage.setItem('exhaustStatus', exhaustStatus);
+                localStorage.setItem('intakeStatus', intakeStatus);
+                localStorage.setItem('fanSpeed', fanSpeed);
+                localStorage.setItem('intakeSpeed', intakeSpeed);
+            }
+
+            // Update CO2 indicators
+            let co2RangeStatus = 'Zu niedrig';
+            let co2RangeClass = 'red';
+            if (climate.co2 >= co2Target - 100 && climate.co2 <= co2Target + 100) {
+                co2RangeStatus = 'Ideal';
+                co2RangeClass = 'green';
+            } else if (climate.co2 >= co2Target - 200 && climate.co2 <= co2Target + 200) {
+                co2RangeStatus = 'Akzeptabel';
+                co2RangeClass = 'yellow';
+            } else if (climate.co2 > co2Target + 200) {
+                co2RangeStatus = 'Zu hoch';
+                co2RangeClass = 'red';
+            }
+            let vpdEffect = 'Normal';
+            if (climate.vpd > targetVPD + 0.2) {
+                vpdEffect = 'Hoher VPD kann CO₂-Aufnahme reduzieren';
+            } else if (climate.vpd < targetVPD - 0.2) {
+                vpdEffect = 'Niedriger VPD kann CO₂-Aufnahme erhöhen';
+            }
+
+            // Update chart
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = co2Data;
+                chartInstance.data.datasets[1].data = Array(17).fill(null).concat(co2Data7Days.slice(-7));
+                chartInstance.update();
+            }
+
+            document.getElementById('exhaustIndicator').classList.toggle('on', exhaustStatus === 'An');
+            document.getElementById('exhaustIndicator').classList.toggle('off', exhaustStatus !== 'An');
+            document.getElementById('intakeIndicator').classList.toggle('on', intakeStatus === 'An');
+            document.getElementById('intakeIndicator').classList.toggle('off', intakeStatus !== 'An');
+            document.getElementById('autoIndicator').classList.toggle('on', autoMode);
+            document.getElementById('autoIndicator').classList.toggle('off', !autoMode);
+            document.getElementById('co2Indicator').classList.toggle('on', co2Mode);
+            document.getElementById('co2Indicator').classList.toggle('off', !co2Mode);
+            document.getElementById('co2IndicatorDuplicate').classList.toggle('on', co2Mode);
+            document.getElementById('co2IndicatorDuplicate').classList.toggle('off', !co2Mode);
+            document.getElementById('condensationStatus').textContent = `Kondenswasser: ${climate.condensationDetected ? 'Erkannt' : 'Nicht erkannt'}`;
+            document.getElementById('currentCO2').textContent = `Aktueller Wert: ${climate.co2} ppm`;
+            document.getElementById('co2Average').textContent = `Durchschnitt (24h): ${climate.co2Average} ppm`;
+            document.getElementById('climateTemp').textContent = `Temperatur: ${climate.temperature} °C`;
+            document.getElementById('climateHumidity').textContent = `Luftfeuchtigkeit: ${climate.humidity} %`;
+            document.getElementById('co2VPD').textContent = `VPD: ${climate.vpd} kPa (${vpdEffect})`;
+            document.getElementById('co2RangeText').textContent = co2RangeStatus;
+            document.getElementById('co2RangeText').className = `co2-range-text ${co2RangeClass}`;
+            document.getElementById('co2Injections').textContent = `CO₂-Einsätze pro Tag: ${co2Injections}`;
+            document.getElementById('currentTemp').textContent = `Aktuelle Temperatur: ${climate.temperature} °C`;
+            document.getElementById('currentHumidity').textContent = `Aktuelle Luftfeuchtigkeit: ${climate.humidity} %`;
+            document.getElementById('currentVPD').textContent = `Aktueller VPD: ${climate.vpd} kPa`;
+            document.getElementById('fanSpeedPercent').textContent = `${fanSpeed}%`;
+            document.getElementById('intakeSpeedPercent').textContent = `${intakeSpeed}%`;
+        }
+
+        // Toggle ventilation (manual control)
+        function toggleVentilation(type) {
+            const status = localStorage.getItem(`${type}Status`) === 'An' ? 'Aus' : 'An';
+            localStorage.setItem(`${type}Status`, status);
+            localStorage.setItem('autoMode', false);
+            document.getElementById('autoButton').classList.remove('active');
+            updateVentilation();
+        }
+
+        // Toggle auto mode
+        function toggleAutoMode() {
+            const autoButton = document.getElementById('autoButton');
+            const autoMode = localStorage.getItem('autoMode') !== 'true';
+            localStorage.setItem('autoMode', autoMode);
+            autoButton.classList.toggle('active', autoMode);
+            updateVentilation();
+        }
+
+        // Toggle CO2 mode
+        function toggleCO2Mode() {
+            const co2Button = document.getElementById('co2Button');
+            const co2Mode = localStorage.getItem('co2Mode') !== 'true';
+            localStorage.setItem('co2Mode', co2Mode);
+            co2Button.classList.toggle('active', co2Mode);
+            if (co2Mode) {
+                const pauseMinutes = parseInt(document.getElementById('co2Pause').value) || 5;
+                localStorage.setItem('co2End', Date.now() + pauseMinutes * 60 * 1000);
+            } else {
+                localStorage.setItem('co2End', 0);
+            }
+            updateVentilation();
+        }
+
+        // Update fan speed
+        function updateFanSpeed() {
+            const fanSpeed = parseFloat(document.getElementById('fanSpeedInput').value) || 50;
+            localStorage.setItem('fanSpeed', fanSpeed);
+            localStorage.setItem('autoMode', false);
+            document.getElementById('autoButton').classList.remove('active');
+            document.getElementById('fanSpeedPercent').textContent = `${fanSpeed}%`;
+            updateVentilation();
+        }
+
+        // Update intake speed
+        function updateIntakeSpeed() {
+            const intakeSpeed = parseFloat(document.getElementById('intakeSpeedInput').value) || 50;
+            localStorage.setItem('intakeSpeed', intakeSpeed);
+            localStorage.setItem('autoMode', false);
+            document.getElementById('autoButton').classList.remove('active');
+            document.getElementById('intakeSpeedPercent').textContent = `${intakeSpeed}%`;
+            updateVentilation();
+        }
+
+        // Update ventilation mode
+        function updateVentilationMode(type) {
+            const mode = document.getElementById(`${type}Mode`).value;
+            localStorage.setItem(`${type}Mode`, mode);
+            localStorage.setItem('autoMode', false);
+            document.getElementById('autoButton').classList.remove('active');
+            updateVentilation();
+        }
+
+        // Update climate settings
+        function updateClimateSettings() {
+            const minTemp = parseFloat(document.getElementById('minTemp').value) || 18;
+            const maxTemp = parseFloat(document.getElementById('maxTemp').value) || 25;
+            const minHumidity = parseFloat(document.getElementById('minHumidity').value) || 40;
+            const maxHumidity = parseFloat(document.getElementById('maxHumidity').value) || 60;
+            const targetVPD = parseFloat(document.getElementById('targetVPD').value) || 1.2;
+            const condensationThreshold = parseFloat(document.getElementById('condensationThreshold').value) || 80;
+            localStorage.setItem('minTemp', minTemp);
+            localStorage.setItem('maxTemp', maxTemp);
+            localStorage.setItem('minHumidity', minHumidity);
+            localStorage.setItem('maxHumidity', maxHumidity);
+            localStorage.setItem('targetVPD', targetVPD);
+            localStorage.setItem('condensationThreshold', condensationThreshold);
+            updateVentilation();
+        }
+
+        // Update CO2 settings
+        function updateCO2Settings() {
+            const co2Target = parseFloat(document.getElementById('co2Target').value) || 1000;
+            const co2LightOnly = document.getElementById('co2LightOnly').checked;
+            const co2ModeType = document.getElementById('co2ModeType').value;
+            const co2Pause = parseInt(document.getElementById('co2Pause').value) || 5;
+            localStorage.setItem('co2Target', co2Target);
+            localStorage.setItem('co2LightOnly', co2LightOnly);
+            localStorage.setItem('co2ModeType', co2ModeType);
+            localStorage.setItem('co2Pause', co2Pause);
+            updateVentilation();
+        }
+
+        // Calibrate CO2 sensor
+        function calibrateCO2() {
+            localStorage.setItem('co2Injections', 0);
+            co2Data = Array(24).fill(400);
+            co2Data7Days = Array(7).fill(400);
+            alert('CO₂-Sensor wurde zurückgesetzt.');
+            updateVentilation();
+        }
+
+        // Initialize chart and update periodically
+        initializeCO2Chart();
+        updateVentilation();
+        updateCO2Settings();
+        updateClimateSettings();
+        setInterval(updateVentilation, 5000); // Update every 5 seconds
+    </script>
+</body>
+</html>
