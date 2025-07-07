@@ -117,210 +117,58 @@
             font-weight: bold;
             margin-bottom: 10px;
             color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
         }
         .data span {
             font-size: 1.2em;
             color: #2ecc71;
         }
-        .progress-bar {
-            width: 100%;
-            background-color: #4a5657;
-            border: 1px solid #000000;
-            border-radius: 5px;
-            height: 20px;
+        .data .values {
             margin-top: 10px;
-            overflow: hidden;
         }
-        .progress-fill {
-            height: 100%;
-            background-color: #3498db;
-            width: 65%;
-            transition: width 0.5s ease-in-out;
-        }
-        .timer-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #4a5657;
-            border-radius: 5px;
-            background-color: #252f30;
-        }
-        .timer-display {
-            font-size: 1.2em;
-            color: #2ecc71;
-            margin-bottom: 15px;
-        }
-        .timer-input {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .timer-input input {
-            width: 60px;
-            padding: 5px;
-            background-color: #1c2526;
-            border: 1px solid #4a5657;
-            color: #e0e0e0;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .timer-input button {
-            background-color: #2ecc71;
-            color: #1c2526;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s;
-        }
-        .timer-input button:hover {
-            background-color: #27ae60;
-        }
-        .flow-rate {
-            margin-top: 15px;
-            font-size: 1.1em;
-            color: #2ecc71;
-        }
-        .subsection {
-            margin: 15px 0;
-            padding-left: 10px;
-        }
-        .subsection strong {
-            display: block;
-            margin-bottom: 10px;
-            color: #e0e0e0;
-        }
-        .subsection div {
+        .data .values div {
             margin-bottom: 10px;
         }
         .sub-section {
-            margin: 15px  original code, but with the updated navigation consistent with the other files. The `artifact_id` remains the same as in the previous version (`f30a9225-2e90-4666-ac72-354481e174af`), but a new `artifact_version_id` is assigned to reflect the update.
-
-<xaiArtifact artifact_id="f30a9225-2e90-4666-ac72-354481e174af" artifact_version_id="a621942f-6b46-49c4-9294-1fca21f2c061" title="bewasserung.html" contentType="text/html">
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grow Controller - Bewässerung</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #1c2526;
-            margin: 0;
-            padding: 20px;
-            color: #e0e0e0;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            color: #2ecc71;
-            font-size: 2.5em;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .nav {
-            background-color: #2f3b3c;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-        }
-        .nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: nowrap;
-            gap: 10px;
-        }
-        .nav li {
-            position: relative;
-        }
-        .nav a {
-            color: #2ecc71;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 10px 15px;
-            display: block;
-            transition: color 0.2s;
-        }
-        .nav a:hover {
-            color: #27ae60;
-        }
-        .dropdown {
-            position: relative;
-        }
-        .dropdown-content {
             display: none;
-            position: absolute;
-            background-color: #252f30;
-            border-radius: 5px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 1;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            margin-top: 10px;
             padding: 10px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            min-width: 300px;
-            max-width: 400px;
-        }
-        .dropdown-content a {
-            color: #2ecc71;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-            font-size: 0.9em;
-            flex: 1 1 45%;
-            text-align: center;
-        }
-        .dropdown-content a:hover {
             background-color: #1c2526;
-            color: #27ae60;
-        }
-        .dropdown:hover .dropdown-content,
-        .dropdown.touched .dropdown-content {
-            display: flex;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #2f3b3c;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        .container h2 {
-            color: #2ecc71;
-            border-bottom: 2px solid #2ecc71;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .data div.section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #4a5657;
             border-radius: 5px;
-            background-color: #252f30;
         }
-        .data label {
+        .sub-section.active {
             display: block;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #e0e0e0;
         }
-        .data span {
-            font-size: 1.2em;
-            color: #2ecc71;
+        .input-container {
+            margin-top: 10px;
+        }
+        .input-container input[type="number"],
+        .input-container input[type="time"] {
+            background-color: #1c2526;
+            color: #e0e0e0;
+            border: 1px solid #4a5657;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 100%;
+            max-width: 150px;
+        }
+        .input-container button {
+            background-color: #2ecc71;
+            color: #1c2526;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .input-container button:hover {
+            background-color: #27ae60;
         }
         .progress-bar {
             width: 100%;
@@ -337,69 +185,13 @@
             width: 65%;
             transition: width 0.5s ease-in-out;
         }
-        .timer-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #4a5657;
-            border-radius: 5px;
-            background-color: #252f30;
-        }
-        .timer-display {
-            font-size: 1.2em;
-            color: #2ecc71;
-            margin-bottom: 15px;
-        }
-        .timer-input {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .timer-input input {
-            width: 60px;
-            padding: 5px;
-            background-color: #1c2526;
-            border: 1px solid #4a5657;
+        .values strong {
             color: #e0e0e0;
-            border-radius: 5px;
-            text-align: center;
+            font-weight: bold;
         }
-        .timer-input button {
-            background-color: #2ecc71;
-            color: #1c2526;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s;
-        }
-        .timer-input button:hover {
-            background-color: #27ae60;
-        }
-        .flow-rate {
-            margin-top: 15px;
-            font-size: 1.1em;
-            color: #2ecc71;
-        }
-        .subsection {
-            margin: 15px 0;
-            padding-left: 10px;
-        }
-        .subsection strong {
+        .summary-values span {
             display: block;
-            margin-bottom: 10px;
-            color: #e0e0e0;
-        }
-        .subsection div {
-            margin-bottom: 10px;
-        }
-        .sub-section {
-            margin: 15px 0;
-            padding: 10px;
-            border: 1px solid #4a5657;
-            border-radius: 5px;
-            background-color: #1c2526;
+            margin-bottom: 5px;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -428,6 +220,10 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .input-container input,
+            .input-container button {
+                max-width: 120px;
+            }
         }
     </style>
 </head>
@@ -435,106 +231,99 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-<div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
         <h2>Bewässerung</h2>
         <div class="data">
             <div class="section">
                 <label>Feuchtigkeit</label>
-                <span>65 %</span>
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
+                <div class="values">
+                    <div><span>65 %</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
                 </div>
             </div>
             <div class="section">
-                <label>Zeiten / Mengen</label>
-                <div class="subsection">
-                    <strong>Letzte Bewässerung</strong>
-                    <div>
-                        <span>Letzte: 08:00 Uhr</span>
-                    </div>
-                    <div>
-                        <span>Letzte Flussdauer: -- min</span>
-                    </div>
-                    <div>
-                        <span>Letzte Menge: -- L</span>
+                <label onclick="toggleSection('timesSection')">Zeiten / Mengen <span class="arrow">▼</span></label>
+                <div class="values summary-values">
+                    <div id="nextSummary">
+                        <span id="nextTimeSummary">Nächste: 20:00 Uhr</span>
+                        <span id="startTimeSummary" style="display: none;">Startzeit: --:--</span>
+                        <span id="flowAmountSummary" style="display: none;">Flussmenge: -- L</span>
                     </div>
                 </div>
-                <div class="subsection">
-                    <strong>Nächste Bewässerung</strong>
-                    <div>
-                        <span id="nextTime">Nächste: 20:00 Uhr</span>
+                <div id="timesSection" class="sub-section">
+                    <div class="values">
+                        <div><strong>Letzte Bewässerung</strong></div>
+                        <div><span>Letzte: 08:00 Uhr</span></div>
+                        <div><span>Letzte Flussdauer: -- min</span></div>
+                        <div><span>Letzte Menge: -- L</span></div>
                     </div>
-                    <div id="nextDuration" style="display: none;">
-                        <span id="nextDurationValue">Nächste Flussdauer: -- min</span>
+                    <div class="values">
+                        <div><strong>Nächste Bewässerung</strong></div>
+                        <div><span id="nextTime">Nächste: 20:00 Uhr</span></div>
+                        <div id="nextDuration" style="display: none;">
+                            <span id="nextDurationValue">Nächste Flussdauer: -- min</span>
+                        </div>
+                        <div id="nextAmount" style="display: none;">
+                            <span id="nextAmountValue">Nächste Menge: -- L</span>
+                        </div>
+                        <div id="nextRequiredTime" style="display: none;">
+                            <span id="nextRequiredTimeValue">Benötigte Zeit: -- min</span>
+                        </div>
                     </div>
-                    <div id="nextAmount" style="display: none;">
-                        <span id="nextAmountValue">Nächste Menge: -- L</span>
-                    </div>
-                    <div id="nextRequiredTime" style="display: none;">
-                        <span id="nextRequiredTimeValue">Benötigte Zeit: -- min</span>
-                    </div>
-                </div>
-                <div>
-                    <span>Menge gesamt: -- L</span>
+                    <div><span>Menge gesamt: -- L</span></div>
                 </div>
             </div>
-            <div class="section timer-section">
-                <label>Timer für nächste Bewässerung</label>
-                <div class="timer-display">
-                    <span id="timerDisplay">Zeitraum: --:-- bis --:--</span>
+            <div class="section">
+                <label onclick="toggleSection('timerSection')">Timer für nächste Bewässerung <span class="arrow">▼</span></label>
+                <div class="values">
+                    <div><span id="timerSummary">Zeitraum: --:-- bis --:--</span></div>
                 </div>
-                <div class="sub-section">
-                    <label>Flussmenge und Startzeit</label>
-                    <div class="timer-input">
-                        <label>Flussmenge (L):</label>
-                        <input type="number" min="0" step="0.1" placeholder="L" id="flowAmount" />
-                        <label>Startzeit:</label>
-                        <input type="number" min="0" max="23" placeholder="HH" id="flowStartHour" />
-                        <input type="number" min="0" max="59" placeholder="MM" id="flowStartMinute" />
+                <div id="timerSection" class="sub-section">
+                    <div class="values">
+                        <div><span id="timerDisplay">Zeitraum: --:-- bis --:--</span></div>
+                    </div>
+                    <div class="input-container">
+                        <label>Flussmenge und Startzeit</label>
+                        <div><label>Flussmenge (L): <input type="number" min="0" step="0.1" id="flowAmount"></label></div>
+                        <div><label>Startzeit: <input type="time" id="flowStartTime"></label></div>
                         <button onclick="setFlow()">Flussmenge setzen</button>
                     </div>
-                </div>
-                <div class="sub-section">
-                    <label>Zeitraum</label>
-                    <div class="timer-input">
-                        <label>Von:</label>
-                        <input type="number" min="0" max="23" placeholder="HH" id="startHour" />
-                        <input type="number" min="0" max="59" placeholder="MM" id="startMinute" />
-                        <label>Bis:</label>
-                        <input type="number" min="0" max="23" placeholder="HH" id="endHour" />
-                        <input type="number" min="0" max="59" placeholder="MM" id="endMinute" />
+                    <div class="input-container">
+                        <label>Zeitraum</label>
+                        <div><label>Von: <input type="time" id="startTime"></label></div>
+                        <div><label>Bis: <input type="time" id="endTime"></label></div>
                         <button onclick="setTimer()">Zeitraum setzen</button>
                     </div>
-                </div>
-                <div class="flow-rate">
-                    <span id="flowRate">Resultierende Flussmenge: -- L</span>
+                    <div><span id="flowRate">Resultierende Flussmenge: -- L</span></div>
                 </div>
             </div>
         </div>
@@ -558,10 +347,18 @@
             });
         });
 
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
+
         function setFlow() {
             const flowAmount = parseFloat(document.getElementById('flowAmount').value) || 0;
-            const flowStartHour = parseInt(document.getElementById('flowStartHour').value) || 0;
-            const flowStartMinute = parseInt(document.getElementById('flowStartMinute').value) || 0;
+            const flowStartTime = document.getElementById('flowStartTime').value;
+            const [flowStartHour, flowStartMinute] = flowStartTime ? flowStartTime.split(':').map(Number) : [0, 0];
 
             // Format time as HH:MM
             const formatTime = (hour, minute) => {
@@ -574,7 +371,14 @@
 
             // Update display
             document.getElementById('flowRate').textContent = `Resultierende Flussmenge: ${flowRateText} L`;
-            document.getElementById('nextTime').textContent = `Nächste: ${formatTime(flowStartHour, flowStartMinute)}`;
+            if (flowStartTime) {
+                document.getElementById('nextTime').textContent = `Nächste: ${formatTime(flowStartHour, flowStartMinute)}`;
+                document.getElementById('nextTimeSummary').textContent = `Nächste: ${formatTime(flowStartHour, flowStartMinute)}`;
+                document.getElementById('startTimeSummary').textContent = `Startzeit: ${formatTime(flowStartHour, flowStartMinute)}`;
+                document.getElementById('startTimeSummary').style.display = 'block';
+            }
+            document.getElementById('flowAmountSummary').textContent = `Flussmenge: ${flowRateText} L`;
+            document.getElementById('flowAmountSummary').style.display = flowAmount > 0 ? 'block' : 'none';
             document.getElementById('nextAmountValue').textContent = `Nächste Menge: ${flowRateText} L`;
             document.getElementById('nextRequiredTimeValue').textContent = `Benötigte Zeit: ${requiredTime} min`;
             document.getElementById('nextAmount').style.display = 'block';
@@ -582,11 +386,11 @@
         }
 
         function setTimer() {
-            const startHour = parseInt(document.getElementById('startHour').value) || 0;
-            const startMinute = parseInt(document.getElementById('startMinute').value) || 0;
-            const endHour = parseInt(document.getElementById('endHour').value) || 0;
-            const endMinute = parseInt(document.getElementById('endMinute').value) || 0;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
             const flowAmount = parseFloat(document.getElementById('flowAmount').value) || 0;
+            const [startHour, startMinute] = startTime ? startTime.split(':').map(Number) : [0, 0];
+            const [endHour, endMinute] = endTime ? endTime.split(':').map(Number) : [0, 0];
 
             // Format time as HH:MM
             const formatTime = (hour, minute) => {
@@ -594,9 +398,9 @@
             };
 
             // Calculate duration in hours
-            const startTime = new Date(2025, 0, 1, startHour, startMinute);
-            const endTime = new Date(2025, 0, 1, endHour, endMinute);
-            let durationHours = (endTime - startTime) / (1000 * 60 * 60);
+            const startDateTime = new Date(2025, 0, 1, startHour, startMinute);
+            const endDateTime = new Date(2025, 0, 1, endHour, endMinute);
+            let durationHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
             
             // Handle case where end time is before start time (next day)
             if (durationHours < 0) {
@@ -610,9 +414,17 @@
             const requiredTime = flowAmount > 0 ? (flowAmount / 100 * 60).toFixed(2) : durationMinutes;
 
             // Update display
-            document.getElementById('timerDisplay').textContent = `Zeitraum: ${formatTime(startHour, startMinute)} bis ${formatTime(endHour, endMinute)}`;
+            if (startTime && endTime) {
+                document.getElementById('timerDisplay').textContent = `Zeitraum: ${formatTime(startHour, startMinute)} bis ${formatTime(endHour, endMinute)}`;
+                document.getElementById('timerSummary').textContent = `Zeitraum: ${formatTime(startHour, startMinute)} bis ${formatTime(endHour, endMinute)}`;
+            }
             document.getElementById('flowRate').textContent = `Resultierende Flussmenge: ${flowRateText} L`;
-            document.getElementById('nextTime').textContent = `Nächste: ${formatTime(startHour, startMinute)}`;
+            if (startTime) {
+                document.getElementById('nextTime').textContent = `Nächste: ${formatTime(startHour, startMinute)}`;
+                document.getElementById('nextTimeSummary').textContent = `Nächste: ${formatTime(startHour, startMinute)}`;
+            }
+            document.getElementById('flowAmountSummary').textContent = `Flussmenge: ${flowRateText} L`;
+            document.getElementById('flowAmountSummary').style.display = flowRate > 0 ? 'block' : 'none';
             document.getElementById('nextDurationValue').textContent = `Nächste Flussdauer: ${durationMinutes} min`;
             document.getElementById('nextAmountValue').textContent = `Nächste Menge: ${flowRateText} L`;
             document.getElementById('nextRequiredTimeValue').textContent = `Benötigte Zeit: ${requiredTime} min`;
