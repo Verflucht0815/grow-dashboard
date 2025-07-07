@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -144,19 +105,75 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: block;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .sub-section p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .sub-section ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .sub-section ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .sub-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .sub-section table th,
+        .sub-section table td {
+            border: 1px solid #4a5657;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .sub-section table th {
+            background-color: #2ecc71;
+            color: #1c2526;
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +202,19 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .sub-section h3 {
+                font-size: 1em;
+            }
+            .sub-section p,
+            .sub-section ul li,
+            .sub-section table th,
+            .sub-section table td {
+                font-size: 0.8em;
+            }
+            .sub-section table th,
+            .sub-section table td {
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -192,79 +222,329 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-<div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
         <h2>Substrat</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Das Substrat beeinflusst die Wasser- und Nährstoffversorgung der Pflanzen. Diese Anleitung bietet Informationen zur Auswahl und Pflege von Substraten wie Erde, Kokos oder Hydroponik.</p>
-            <h3>Detaillierte Erklärungen</h3>
-            <ul>
-                <li><strong>Erde</strong>
-                    <p><strong>Eigenschaften</strong>: Speichert Nährstoffe und Wasser, ideal für Anfänger.</p>
-                    <p><strong>Wann</strong>: Geeignet für alle Phasen, besonders Keimlingsphase.</p>
-                    <p><strong>Warum?</strong> Erde bietet Pufferkapazität für Nährstoffe und Wasser (Rodriguez et al., 2024).</p>
-                </li>
-                <li><strong>Kokos</strong>
-                    <p><strong>Eigenschaften</strong>: Gute Wasserretention, aber schneller Nährstoffverbrauch.</p>
-                    <p><strong>Wann</strong>: Vegetative und Blütephase, besonders in Hydroponik-Systemen.</p>
-                    <p><strong>Warum?</strong> Kokos ermöglicht präzises Nährstoffmanagement (Gomez & Wang, 2024).</p>
-                </li>
-                <li><strong>Hydroponik</strong>
-                    <p><strong>Eigenschaften</strong>: Nährstoffe direkt im Wasser gelöst, keine Substratspeicherung.</p>
-                    <p><strong>Wann</strong>: Vegetative und Blütephase für maximale Kontrolle.</p>
-                    <p><strong>Warum?</strong> Hydroponik maximiert die Nährstoffaufnahme (Chen et al., 2025).</p>
-                </li>
-            </ul>
-            <h3>Praktische Anleitungen</h3>
-            <ul>
-                <li><strong>Erde</strong>
-                    <ol>
-                        <li>Wähle vorgedämpfte Blumenerde mit pH 5.8–6.2.</li>
-                        <li>Spüle alle 2–3 Wochen, um Salzablagerungen zu vermeiden.</li>
-                    </ol>
-                </li>
-                <li><strong>Kokos</strong>
-                    <ol>
-                        <li>Vorspülen mit pH 5.8 Wasser, um Natrium zu entfernen.</li>
-                        <li>Dünge regelmäßig mit EC-Wert 0.8–2.0 mS/cm.</li>
-                    </ol>
-                </li>
-                <li><strong>Hydroponik</strong>
-                    <ol>
-                        <li>Halte den pH-Wert bei 5.5–6.5 und EC bei 1.0–2.0 mS/cm.</li>
-                        <li>Wechsle die Nährlösung wöchentlich.</li>
-                    </ol>
-                </li>
-            </ul>
-            <h3>Hinweis</h3>
-            <p>Wähle das Substrat basierend auf Pflanzenart und Anbaumethode. Überwache pH und EC regelmäßig.</p>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('terraSection')">Erde (Terra) <span class="arrow">▼</span></label>
+                <div id="terraSection" class="sub-section">
+                    <h3>🌱 Pflege und Stabilisierung von Terra-Substraten beim Anbau</h3>
+                    <p>Diese Bestandteile verbessern Luft- und Wasserführung, was bei Cannabis essentiell ist, da die Wurzeln schnell wachsen und hohe Sauerstoffansprüche haben.</p>
+                    <h3>🧱 Mineralische Strukturkomponenten: Funktion & Wirkung</h3>
+                    <ul>
+                        <li><strong>Bims</strong>
+                            <ul>
+                                <li>Hält die Substratstruktur langfristig offen</li>
+                                <li>Unterstützt intensives Wurzelwachstum durch gute Sauerstoffversorgung</li>
+                                <li>Fördert gleichmäßige Feuchtigkeit – wichtig für Nährstoffaufnahme und Mykorrhiza</li>
+                            </ul>
+                        </li>
+                        <li><strong>Zeolith</strong>
+                            <ul>
+                                <li>Puffer für Kalium, Calcium, Ammonium → stabilisiert EC bei schnellen Schwankungen</li>
+                                <li>Ideal bei häufigem Gießen oder starker Nährstoffzehrung in der Blüte</li>
+                                <li>Unterstützt Mykorrhiza, indem es Ionen langsam abgibt</li>
+                                <li>Hilfreich bei leicht überdüngten Substraten (fängt Spitzen ab)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Cocosstücke</strong>
+                            <ul>
+                                <li>Lockern schwere Substrate auf, verbessern Luftführung</li>
+                                <li>Ideal bei stark wasserhaltigen Mischungen, um Verdichtungen im Topf zu vermeiden</li>
+                                <li>Sehr geeignet in warmen Growräumen oder bei hoher Luftfeuchte</li>
+                                <li>Unterstützen symbiotisches Wurzelmilieu (besonders in Verbindung mit Mykorrhiza)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Perlit & Blähtonbruch</strong>
+                            <ul>
+                                <li>Reine Drainage- und Luftporenbildner</li>
+                                <li>Cannabis reagiert besonders empfindlich auf Wurzelstaunässe → Perlitanteile ab ~10–20 % helfen gegen „nasse Füße“</li>
+                                <li>In reinen Torfmischungen Pflicht, wenn das Substrat zur Verdichtung neigt</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>📊 EC- und pH-Kontrolle im Substrat (während des Grows)</h3>
+                    <p>Cannabis reagiert sensibel auf pH- oder EC-Abweichungen – vor allem in der Blüte. Ein stabiles Substrat trägt wesentlich zur Nährstoffverfügbarkeit bei.</p>
+                    <p><strong>Messpunkte:</strong></p>
+                    <ul>
+                        <li>pH im Drain: Ziel 6,0–6,5</li>
+                        <li>EC im Drain:
+                            <ul>
+                                <li>Vegetativ: 1,0–1,4 mS/cm</li>
+                                <li>Blüte: 1,5–2,0 mS/cm</li>
+                                <li>2,5 mS/cm = Überdüngungsgefahr</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p><strong>Bei Abweichungen:</strong></p>
+                    <table>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Ursache</th>
+                            <th>Maßnahme</th>
+                        </tr>
+                        <tr>
+                            <td>pH zu hoch (>6,7)</td>
+                            <td>Hartes Gießwasser, kalkreicher Boden, schwacher Verbrauch</td>
+                            <td>Gießwasser ansäuern (pH 5,8–6,0), keine Basendünger</td>
+                        </tr>
+                        <tr>
+                            <td>pH zu niedrig (<5,8)</td>
+                            <td>zu viele saure Dünger (z. B. Ammonium), hohe Mikrobendichte</td>
+                            <td>Kalk oder Ca/Mg-Dünger verwenden, auf pH 6,2 anheben</td>
+                        </tr>
+                        <tr>
+                            <td>EC zu hoch (>2,5)</td>
+                            <td>zu starke Düngung, schlechte Drainage, Trockenzonen</td>
+                            <td>Spülen mit 2–3× Volumen Wasser, Drain kontrollieren</td>
+                        </tr>
+                        <tr>
+                            <td>EC zu niedrig (<0,8)</td>
+                            <td>zu wenig Dünger, hoher Verbrauch (z. B. Blütewoche 5–6)</td>
+                            <td>Nährstofflösung erhöhen, ggf. EC-Dünger anpassen</td>
+                        </tr>
+                    </table>
+                    <h3>🔁 Wiederverwendung von Terra</h3>
+                    <p>Bei richtiger Pflege lässt sich Terra 1–2 Mal wiederverwenden – besonders sinnvoll bei hochwertigen, mineralisch gestützten Substraten (Bims, Zeolith).</p>
+                    <p><strong>Vorgehen:</strong></p>
+                    <ul>
+                        <li>Wurzeln & Stiele entfernen, lockern (keine Pressklumpen)</li>
+                        <li>Substrat mit lauwarmem Wasser ausgiebig durchspülen, Drain-EC < 0,5 mS/cm anstreben</li>
+                        <li>Keinen pH-Down oder pH-Up mehr verwenden – rein biologisch regenerieren</li>
+                        <li>Frische Mikroorganismen (Mykorrhiza, Trichoderma) einbringen</li>
+                        <li>Optional: etwas frische Cocosstücke, Zeolith, Wurmhumus ergänzen</li>
+                        <li>Nicht länger als zwei Growzyklen verwenden – Struktur und Pufferfähigkeit nehmen ab</li>
+                    </ul>
+                    <h3>🧬 Mikrobiologie gezielt erhalten</h3>
+                    <p>Cannabis profitiert enorm von aktiven Mikroorganismen im Wurzelraum:</p>
+                    <table>
+                        <tr>
+                            <th>Mikroorganismus</th>
+                            <th>Wirkung beim Anbau</th>
+                        </tr>
+                        <tr>
+                            <td>Mykorrhiza</td>
+                            <td>Unterstützt Phosphoraufnahme, schützt vor Wurzelpathogenen, verbessert Stressresistenz</td>
+                        </tr>
+                        <tr>
+                            <td>Trichoderma</td>
+                            <td>Antagonist gegen Pilzkrankheiten, fördert schnelle Wurzelbesiedlung</td>
+                        </tr>
+                        <tr>
+                            <td>Bacillus subtilis</td>
+                            <td>Aktiviert Abwehrsysteme der Pflanze, stabilisiert pH im Rhizosphärenbereich</td>
+                        </tr>
+                    </table>
+                    <p><strong>Anwendung:</strong> Beim Umtopfen, nach Spülungen oder bei Wiederverwendung erneut impfen – z. B. als Granulat in die Topfschicht oder Flüssiggabe über Gießwasser.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('cocoSection')">Coco <span class="arrow">▼</span></label>
+                <div id="cocoSection" class="sub-section">
+                    <h3>🥥 Anbau auf Coco (Kokossubstrat)</h3>
+                    <p>Kokossubstrat besteht aus aufbereiteter Kokosnussfaser (meist gepuffert) und ist inert, pH-stabil und luftig. Es speichert gut Wasser, bleibt aber sauerstoffreich – perfekt für Cannabiswurzeln.</p>
+                    <h3>📈 Eigenschaften</h3>
+                    <table>
+                        <tr>
+                            <th>Merkmal</th>
+                            <th>Zielbereich</th>
+                        </tr>
+                        <tr>
+                            <td>pH im Substrat</td>
+                            <td>5,8–6,2</td>
+                        </tr>
+                        <tr>
+                            <td>EC im Drain</td>
+                            <td>1,0–2,0 mS/cm</td>
+                        </tr>
+                        <tr>
+                            <td>Drainageanteil</td>
+                            <td>10–20 %</td>
+                        </tr>
+                        <tr>
+                            <td>Gießen</td>
+                            <td>Häufig (täglich bis mehrfach), mit leichtem Drain</td>
+                        </tr>
+                        <tr>
+                            <td>Düngung</td>
+                            <td>Bei jeder Gabe, da Coco selbst keine Nährstoffe speichert</td>
+                        </tr>
+                    </table>
+                    <h3>🧪 Pflege und Kontrolle</h3>
+                    <p><strong>Gießstrategie</strong></p>
+                    <ul>
+                        <li>Immer mit Dünger gießen, auch bei Jungpflanzen (ab 0,4 mS/cm langsam steigern)</li>
+                        <li>10–20 % Drain erzeugen – sonst steigt der EC im Substrat an</li>
+                        <li>Gießintervall: Täglich oder öfter – ideal bei Tropf- oder Automatisierung</li>
+                    </ul>
+                    <p><strong>pH-Management</strong></p>
+                    <ul>
+                        <li>Ziel: 5,8–6,2</li>
+                        <li>Coco puffert leicht, aber regelmäßig mit pH-korrigiertem Wasser gießen</li>
+                        <li>Bei zu hohem pH → saures Gießwasser verwenden (z. B. pH 5,5–5,7)</li>
+                    </ul>
+                    <p><strong>EC-Kontrolle</strong></p>
+                    <ul>
+                        <li>Drain messen: ideal 1,2–1,8 mS/cm</li>
+                        <li>Wenn der Drain deutlich höher als der Gießwert ist: Flush durchführen</li>
+                    </ul>
+                    <h3>⚠️ Typische Probleme</h3>
+                    <table>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Ursache</th>
+                            <th>Maßnahme</th>
+                        </tr>
+                        <tr>
+                            <td>Ca-/Mg-Mangel</td>
+                            <td>Coco bindet Ca²⁺/Mg²⁺</td>
+                            <td>Ca/Mg-Dünger verwenden (z. B. CalMag)</td>
+                        </tr>
+                        <tr>
+                            <td>EC steigt über 2,5 mS/cm</td>
+                            <td>Kein Drain, Überdüngung</td>
+                            <td>Spülen mit pH-Wasser + leichtem Dünger</td>
+                        </tr>
+                        <tr>
+                            <td>pH driftet über 6,5</td>
+                            <td>zu basisches Wasser, Alkalität</td>
+                            <td>pH-Wert des Wassers senken (5,8–6,0)</td>
+                        </tr>
+                        <tr>
+                            <td>Pflanzen welken trotz Feuchtigkeit</td>
+                            <td>Verdichtetes Substrat, Wurzelschaden</td>
+                            <td>Substrat lockern, Wurzelzone prüfen</td>
+                        </tr>
+                    </table>
+                    <h3>♻️ Wiederverwendung</h3>
+                    <ul>
+                        <li>Max. 2–3 Zyklen bei guter Spülung</li>
+                        <li>Nach jedem Grow: gut durchspülen, Wurzeln entfernen, mit Mikroorganismen neu inokulieren</li>
+                        <li>Salzansammlungen (EC > 0,5 mS/cm nach Spülung) = nicht wiederverwenden</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('hydroSection')">Hydrokultur (DWC) <span class="arrow">▼</span></label>
+                <div id="hydroSection" class="sub-section">
+                    <h3>💧 Anbau in DWC (Deep Water Culture)</h3>
+                    <p>Ein hydroponisches Verfahren, bei dem die Wurzeln in sauerstoffgesättigtem Nährstoffwasser hängen, meist in Netztöpfen über einem Reservoir. Ideal für schnelles, großvolumiges Wachstum.</p>
+                    <h3>📈 Systemparameter</h3>
+                    <table>
+                        <tr>
+                            <th>Faktor</th>
+                            <th>Zielbereich</th>
+                        </tr>
+                        <tr>
+                            <td>pH</td>
+                            <td>5,5–6,0</td>
+                        </tr>
+                        <tr>
+                            <td>EC</td>
+                            <td>0,9–1,4 mS/cm (Veg), bis 2,0 (Blüte)</td>
+                        </tr>
+                        <tr>
+                            <td>Wassertemp.</td>
+                            <td>18–21 °C – kritisch!</td>
+                        </tr>
+                        <tr>
+                            <td>O₂-Gehalt</td>
+                            <td>≥ 6 mg/L (per Luftstein)</td>
+                        </tr>
+                        <tr>
+                            <td>Tankwechsel</td>
+                            <td>Alle 7–10 Tage</td>
+                        </tr>
+                    </table>
+                    <h3>🧪 Pflege und Kontrolle</h3>
+                    <p><strong>Nährlösung</strong></p>
+                    <ul>
+                        <li>Immer mit kompletter Nährlösung fahren (kein „Wasser zwischendurch“)</li>
+                        <li>pH täglich prüfen & anpassen</li>
+                        <li>Nährlösung vollständig austauschen, nicht nur auffüllen</li>
+                        <li>Düngung genau nach Phase:
+                            <ul>
+                                <li>Veg: 0,9–1,3 mS/cm</li>
+                                <li>Blüte: 1,5–2,0 mS/cm</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p><strong>Sauerstoffversorgung</strong></p>
+                    <ul>
+                        <li>Starke Luftpumpen & Luftsteine Pflicht</li>
+                        <li>Mind. 1 L Luft/Minute pro Pflanze</li>
+                        <li>Bei zu wenig Sauerstoff: Wurzelfäule (Pythium-Gefahr!)</li>
+                    </ul>
+                    <p><strong>Wassertemperatur</strong></p>
+                    <ul>
+                        <li>18–21 °C = optimal für Nährstoffaufnahme und Sauerstoffbindung</li>
+                        <li>> 22 °C = Sauerstoff sinkt, Pythium steigt</li>
+                        <li>< 17 °C = Wurzelaktivität lässt nach</li>
+                    </ul>
+                    <h3>⚠️ Typische Probleme</h3>
+                    <table>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Ursache</th>
+                            <th>Lösung</th>
+                        </tr>
+                        <tr>
+                            <td>pH driftet schnell</td>
+                            <td>Nährstoffe instabil, Mikroflora</td>
+                            <td>Nährlösung wechseln, pH nachregeln</td>
+                        </tr>
+                        <tr>
+                            <td>Wurzeln schleimig/braun</td>
+                            <td>Sauerstoffmangel, Keime</td>
+                            <td>Reservoir kühlen, H₂O₂, Hygienekur</td>
+                        </tr>
+                        <tr>
+                            <td>Wurzeln wachsen nicht</td>
+                            <td>zu kaltes Wasser, EC zu hoch</td>
+                            <td>Temperatur stabilisieren, EC prüfen</td>
+                        </tr>
+                        <tr>
+                            <td>Schaum, Geruch</td>
+                            <td>Biofilm, Bakterien</td>
+                            <td>System desinfizieren, UV oder Enzyme nutzen</td>
+                        </tr>
+                    </table>
+                    <h3>♻️ Pflege & Wartung</h3>
+                    <ul>
+                        <li>Tägliche Kontrolle: pH, EC, Temperatur</li>
+                        <li>Wöchentlicher Wasserwechsel inkl. Tankreinigung</li>
+                        <li>Bei Biozusätzen (z. B. Rhizotonic, Enzyme): Verfallszeit der Lösung beachten</li>
+                        <li>Nach jedem Grow: System zerlegen, mit H₂O₂ oder Chlor reinigen</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -285,6 +565,14 @@
                 }
             });
         });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
     </script>
 </body>
 </html>
