@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grow Controller - Nährstoffe Anleitung</title>
+    <title>Grow Controller - Nährstoffe</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -91,7 +52,7 @@
             display: block;
             transition: color 0.2s;
         }
-        .nav a:hover {
+police: italic;
             color: #27ae60;
         }
         .dropdown {
@@ -144,19 +105,80 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: block;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .sub-section h4 {
+            color: #2ecc71;
+            font-size: 1em;
+            margin: 10px 0;
+        }
+        .sub-section p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .sub-section ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .sub-section ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .sub-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .sub-section table th,
+        .sub-section table td {
+            border: 1px solid #4a5657;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .sub-section table th {
+            background-color: #2ecc71;
+            color: #1c2526;
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +207,22 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .sub-section h3 {
+                font-size: 1em;
+            }
+            .sub-section h4 {
+                font-size: 0.9em;
+            }
+            .sub-section p,
+            .sub-section ul li,
+            .sub-section table th,
+            .sub-section table td {
+                font-size: 0.8em;
+            }
+            .sub-section table th,
+            .sub-section table td {
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -192,184 +230,208 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-   <div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
-        <h2>Nährstoffe-Anleitung</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Nährstoffe sind essenziell für das Pflanzenwachstum. Makro- und Mikronährstoffe unterstützen verschiedene physiologische Prozesse, und ihre Zusammensetzung variiert je nach Wachstumsphase. Präzises Management steigert die Erträge um bis zu 25 % (Fernandez et al., 2025).</p>
-            
-            <h3>NPK-Zahlen: Bedeutung und Schwankungen</h3>
-            <p><strong>Definition</strong>: NPK-Zahlen (z. B. 4-2-2 oder 10-10-8) geben den prozentualen Anteil von Stickstoff (N), Phosphor (P) und Kalium (K) in einem Dünger an. Sie repräsentieren die relativen Mengen dieser Makronährstoffe, die für Pflanzenwachstum, Blütenbildung und Pflanzenstruktur entscheidend sind.</p>
-            <p><strong>Warum schwanken die Zahlen?</strong> Die Schwankungen der NPK-Verhältnisse hängen von mehreren Faktoren ab:</p>
-            <ul>
-                <li><strong>Wachstumsphase</strong>: In der Keimlingsphase werden niedrige, ausgewogene Verhältnisse (z. B. 4-2-2) verwendet, um Überdüngung zu vermeiden, da Keimlinge empfindlich sind und hauptsächlich Samenreserven nutzen. In der vegetativen Phase sind höhere Stickstoffwerte (z. B. 10-5-5) bevorzugt, um Blattwachstum zu fördern. In der Blütephase dominieren Phosphor und Kalium (z. B. 5-10-10), um Blütenbildung und Fruchtsetzung zu unterstützen (Liu et al., 2024).</li>
-                <li><strong>Pflanzenart</strong>: Verschiedene Pflanzen haben unterschiedliche Nährstoffbedürfnisse. Blattgemüse wie Salat benötigt höheren Stickstoff, während blütenintensive Pflanzen wie Tomaten mehr Phosphor und Kalium benötigen (Chen et al., 2025).</li>
-                <li><strong>Anbaumethode</strong>: In Hydroponik oder Kokossubstraten sind präzisere, oft höhere NPK-Werte (z. B. 10-10-8) nötig, da Nährstoffe direkt verfügbar sind. In Erde können niedrigere Werte (z. B. 4-2-2) ausreichen, da das Substrat Nährstoffe speichert (Rodriguez & Patel, 2025).</li>
-                <li><strong>Ziel des Anbaus</strong>: Für schnelles vegetatives Wachstum (z. B. Kräuter) werden stickstoffreiche Dünger bevorzugt, während für Ertrag (z. B. Früchte) phosphor- und kaliumreiche Formeln gewählt werden (Gomez & Wang, 2024).</li>
-                <li><strong>Düngerformulierung</strong>: Niedrige Werte wie 4-2-2 sind oft für organische Dünger oder empfindliche Anwendungen gedacht, während höhere Werte wie 10-10-8 für synthetische Dünger in intensiven Anbausystemen verwendet werden, um eine höhere Nährstoffdichte zu liefern (Fernandez et al., 2025).</li>
-            </ul>
-            <p><strong>Warum?</strong> Die Schwankungen ermöglichen eine präzise Anpassung an die physiologischen Bedürfnisse der Pflanze. Stickstoff fördert die Chlorophyllproduktion, Phosphor unterstützt Energieübertragung und Blütenbildung, und Kalium verbessert die Pflanzenstärke. Die Wahl des Verhältnisses maximiert die Effizienz der Nährstoffaufnahme und minimiert Überdüngung oder Mängel (Li et al., 2025).</p>
-            
-            <h3>Makro- und Mikronährstoffe</h3>
-            <ul>
-                <li><strong>Makronährstoffe</strong>:
+        <h2>🌿 Nährstoffe</h2>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('introductionSection')">Einführung <span class="arrow">▼</span></label>
+                <div id="introductionSection" class="sub-section">
+                    <p>🌱 Nährstoffe sind essenziell für das Pflanzenwachstum und die Entwicklung in allen Phasen des Indoor-Anbaus. Sie liefern die Bausteine für Zellstruktur, Photosynthese und Stoffwechselprozesse. Eine präzise Nährstoffversorgung, abgestimmt auf die jeweilige Wachstumsphase, ist entscheidend für gesunde Pflanzen und maximale Erträge.</p>
+                    <p>Im Indoor-Anbau müssen Nährstoffe gezielt über das Substrat oder die Bewässerung zugeführt werden, da natürliche Bodenprozesse fehlen. Der Grow Controller hilft, Nährstoffkonzentrationen (z. B. EC) und pH-Werte zu überwachen und anzupassen, um optimale Bedingungen zu gewährleisten.</p>
+                    <p>Ziel ist eine phasenangepasste Nährstoffversorgung, die Mangelerscheinungen verhindert und das Wachstum sowie die Blütenbildung maximiert.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('parametersSection')">Definitionen der Nährstoffparameter <span class="arrow">▼</span></label>
+                <div id="parametersSection" class="sub-section">
+                    <h3>Makronährstoffe</h3>
+                    <p>Hauptnährstoffe wie Stickstoff (N), Phosphor (P) und Kalium (K) sind für Wachstum, Blütenbildung und Stoffwechsel entscheidend.</p>
                     <ul>
-                        <li><strong>Stickstoff (N)</strong>:
-                            <p><strong>Funktion</strong>: Fördert Blattwachstum und Chlorophyllproduktion. Hauptbestandteil von Proteinen und Enzymen.</p>
-                            <p><strong>Wann</strong>: Höchster Bedarf in der vegetativen Phase. Geringer Bedarf in der Keimlingsphase, moderat in der Blütephase.</p>
-                            <p><strong>Warum?</strong> Stickstoff ist essenziell für die Zellteilung und Photosynthese (Liu et al., 2024).</p>
-                        </li>
-                        <li><strong>Phosphor (P)</strong>:
-                            <p><strong>Funktion</strong>: Unterstützt Wurzelbildung, Blütenbildung und Energieübertragung (ATP).</p>
-                            <p><strong>Wann</strong>: Höchster Bedarf in der Blütephase, moderat in der vegetativen Phase.</p>
-                            <p><strong>Warum?</strong> Phosphor fördert Blütenentwicklung und Fruchtsetzung (Chen et al., 2025).</p>
-                        </li>
-                        <li><strong>Kalium (K)</strong>:
-                            <p><strong>Funktion</strong>: Reguliert Wasserhaushalt, Stomata-Funktion und Krankheitsresistenz.</p>
-                            <p><strong>Wann</strong>: Höchster Bedarf in der Blütephase, moderat in der vegetativen Phase.</p>
-                            <p><strong>Warum?</strong> Kalium verbessert die Blütenqualität und Pflanzenstärke (Gomez & Wang, 2024).</p>
-                        </li>
-                        <li><strong>Kalzium (Ca)</strong>:
-                            <p><strong>Funktion</strong>: Stärkt Zellwände und unterstützt Wurzelentwicklung.</p>
-                            <p><strong>Wann</strong>: Wichtig in allen Phasen, besonders in der Blütephase (CalMag).</p>
-                            <p><strong>Warum?</strong> Kalzium verhindert Blütenendfäule und verbessert die Struktur (Patel & Gupta, 2025).</p>
-                        </li>
-                        <li><strong>Magnesium (Mg)</strong>:
-                            <p><strong>Funktion</strong>: Zentraler Bestandteil von Chlorophyll, unterstützt Photosynthese.</p>
-                            <p><strong>Wann</strong>: Höchster Bedarf in der vegetativen und Blütephase (CalMag).</p>
-                            <p><strong>Warum?</strong> Magnesium fördert die Energieproduktion und Blattgesundheit (Li et al., 2024).</p>
-                        </li>
-                        <li><strong>Schwefel (S)</strong>:
-                            <p><strong>Funktion</strong>: Bestandteil von Aminosäuren und Enzymen.</p>
-                            <p><strong>Wann</strong>: Moderater Bedarf in allen Phasen.</p>
-                            <p><strong>Warum?</strong> Schwefel unterstützt die Proteinsynthese und Pflanzenvitalität (Rodriguez et al., 2024).</p>
-                        </li>
+                        <li><strong>Stickstoff (N):</strong> Fördert Blattwachstum und Chlorophyllproduktion.</li>
+                        <li><strong>Phosphor (P):</strong> Unterstützt Wurzelentwicklung und Blütenbildung.</li>
+                        <li><strong>Kalium (K):</strong> Reguliert Wasserhaushalt und Enzymaktivität.</li>
                     </ul>
-                </li>
-                <li><strong>Mikronährstoffe</strong>:
+                    <h3>Mikronährstoffe</h3>
+                    <p>Spurenelemente wie Eisen (Fe), Zink (Zn) und Mangan (Mn) unterstützen enzymatische Prozesse und die Photosynthese.</p>
+                    <h3>pH-Wert</h3>
+                    <p>Der pH-Wert des Nährstoffmediums beeinflusst die Verfügbarkeit von Nährstoffen. Ein falscher pH-Wert kann zu Nährstoffblockaden führen.</p>
+                    <h3>EC-Wert (Electrical Conductivity)</h3>
+                    <p>Misst die Nährstoffkonzentration in der Lösung. Zu hohe oder zu niedrige Werte können Stress oder Mangelerscheinungen verursachen.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('targetsSection')">📈 Detaillierte Zielwerte pro Phase <span class="arrow">▼</span></label>
+                <div id="targetsSection" class="sub-section">
+                    <h3>🌱 Keimlingsphase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Makronährstoffe</td>
+                            <td>NPK 1-1-1, niedrige Konzentration</td>
+                            <td>Schützt empfindliche Keimlinge vor Nährstoffverbrennung.</td>
+                        </tr>
+                        <tr>
+                            <td>pH</td>
+                            <td>5.8–6.2</td>
+                            <td>Optimiert die Aufnahme von Mikronährstoffen.</td>
+                        </tr>
+                        <tr>
+                            <td>EC</td>
+                            <td>0.4–0.8 mS/cm</td>
+                            <td>Niedrige Konzentration verhindert Stress bei jungen Pflanzen.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>Keimlinge haben eine geringe Nährstofftoleranz. Eine niedrige EC und ein ausgeglichenes NPK-Verhältnis fördern Wurzel- und Blattentwicklung ohne Überdüngung.</p>
+                    <h3>🌿 Vegetative Phase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Makronährstoffe</td>
+                            <td>NPK 3-1-2, mittlere Konzentration</td>
+                            <td>Fördert starkes Blattwachstum und Biomasseproduktion.</td>
+                        </tr>
+                        <tr>
+                            <td>pH</td>
+                            <td>5.5–6.0</td>
+                            <td>Optimiert die Verfügbarkeit von Stickstoff und Mikronährstoffen.</td>
+                        </tr>
+                        <tr>
+                            <td>EC</td>
+                            <td>1.0–1.8 mS/cm</td>
+                            <td>Unterstützt kräftiges vegetatives Wachstum ohne Überdüngung.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>Höherer Stickstoffbedarf fördert Blattmasse und Zellstreckung. Ein stabiler pH-Wert sorgt für effiziente Nährstoffaufnahme.</p>
+                    <h3>🌸 Blütephase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Makronährstoffe</td>
+                            <td>NPK 1-3-2, hohe Konzentration</td>
+                            <td>Hoher Phosphor- und Kaliumanteil unterstützt Blütenbildung und Harzproduktion.</td>
+                        </tr>
+                        <tr>
+                            <td>pH</td>
+                            <td>5.5–6.0</td>
+                            <td>Sichert die Aufnahme von Phosphor und Kalium.</td>
+                        </tr>
+                        <tr>
+                            <td>EC</td>
+                            <td>1.8–2.2 mS/cm</td>
+                            <td>Höhere Konzentration maximiert Blütenentwicklung, erfordert aber präzise Überwachung.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>Die Pflanze benötigt mehr Phosphor und Kalium für Blüten- und Fruchtbildung. Ein stabiler pH-Wert verhindert Nährstoffblockaden, die Erträge mindern könnten.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('implementationSection')">⚙️ Praktische Anleitung & Fehlerdiagnose <span class="arrow">▼</span></label>
+                <div id="implementationSection" class="sub-section">
+                    <h3>Praktische Anleitung</h3>
+                    <h4>Keimlingsphase</h4>
                     <ul>
-                        <li><strong>Eisen (Fe)</strong>:
-                            <p><strong>Funktion</strong>: Notwendig für Chlorophyllsynthese und Enzymfunktionen.</p>
-                            <p><strong>Wann</strong>: Wichtig in der vegetativen Phase, moderat in der Blütephase.</p>
-                            <p><strong>Warum?</strong> Eisenmangel führt zu Chlorose (gelbe Blätter) (Kim & Lee, 2024).</p>
-                        </li>
-                        <li><strong>Mangan (Mn)</strong>:
-                            <p><strong>Funktion</strong>: Unterstützt Photosynthese und Enzymaktivierung.</p>
-                            <p><strong>Wann</strong>: Moderater Bedarf in allen Phasen.</p>
-                            <p><strong>Warum?</strong> Mangan fördert die Sauerstoffproduktion in der Photosynthese (Chen et al., 2025).</p>
-                        </li>
-                        <li><strong>Zink (Zn)</strong>:
-                            <p><strong>Funktion</strong>: Wichtig für Enzymaktivität und Hormonproduktion.</p>
-                            <p><strong>Wann</strong>: Moderater Bedarf in der vegetativen und Blütephase.</p>
-                            <p><strong>Warum?</strong> Zink unterstützt Wachstumshormone (Rodriguez & Patel, 2025).</p>
-                        </li>
-                        <li><strong>Kupfer (Cu)</strong>:
-                            <p><strong>Funktion</strong>: Fördert Enzymaktivität und Ligninbildung.</p>
-                            <p><strong>Wann</strong>: Geringer Bedarf in allen Phasen.</p>
-                            <p><strong>Warum?</strong> Kupfer stärkt die Pflanzenstruktur (Gomez et al., 2024).</p>
-                        </li>
-                        <li><strong>Bor (B)</strong>:
-                            <p><strong>Funktion</strong>: Unterstützt Zellwandbildung und Blütenentwicklung.</p>
-                            <p><strong>Wann</strong>: Höherer Bedarf in der Blütephase.</p>
-                            <p><strong>Warum?</strong> Bor verhindert Blütenfall und fördert Fruchtsetzung (Li et al., 2025).</p>
-                        </li>
-                        <li><strong>Molybdän (Mo)</strong>:
-                            <p><strong>Funktion</strong>: Wichtig für Stickstofffixierung und Enzymfunktionen.</p>
-                            <p><strong>Wann</strong>: Geringer Bedarf in allen Phasen.</p>
-                            <p><strong>Warum?</strong> Molybdän unterstützt den Stickstoffstoffwechsel (Patel & Gupta, 2024).</p>
-                        </li>
-                        <li><strong>Chlor (Cl)</strong>:
-                            <p><strong>Funktion</strong>: Reguliert Stomata-Funktion und Osmose.</p>
-                            <p><strong>Wann</strong>: Geringer Bedarf in allen Phasen.</p>
-                            <p><strong>Warum?</strong> Chlor unterstützt den Wasserhaushalt (Fernandez et al., 2025).</p>
-                        </li>
+                        <li><strong>Nährstoffzugabe:</strong> Verdünnte Flüssigdünger (z. B. 1/4 der normalen Dosis) verwenden.</li>
+                        <li><strong>pH-Anpassung:</strong> pH-Meter nutzen, um den Zielbereich (5.8–6.2) sicherzustellen.</li>
+                        <li><strong>Überwachung:</strong> EC-Meter einsetzen, um Überdüngung zu vermeiden.</li>
                     </ul>
-                </li>
-            </ul>
-            
-            <h3>Detaillierte Erklärungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <p><strong>Nährstoffe</strong>: Leichter Dünger mit CalMag. Fokus auf Kalzium und Magnesium, geringer Bedarf an Stickstoff, Phosphor, Mikronährstoffe (Fe, Mn, Zn).</p>
-                    <p><strong>EC-Wert</strong>: 0.4–0.8 mS/cm. Niedrige Konzentrationen verhindern Wurzelverbrennungen.</p>
-                    <p><strong>Warum?</strong> Keimlinge nutzen Samenreserven und benötigen minimale Nährstoffe. Kalzium und Magnesium stärken die Zellwände, Eisen unterstützt frühe Chlorophyllbildung (Patel & Gupta, 2024).</p>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <p><strong>Nährstoffe</strong>: Stickstoffreicher Dünger mit CalMag. Hoher Bedarf an Stickstoff, Magnesium, Eisen, Mangan, Zink.</p>
-                    <p><strong>EC-Wert</strong>: 0.8–1.5 mS/cm. Unterstützt schnelles Blattwachstum.</p>
-                    <p><strong>Warum?</strong> Stickstoff und Eisen fördern die Chlorophyllproduktion, Magnesium und Mangan unterstützen die Photosynthese, Zink fördert Wachstumshormone (Liu et al., 2024).</p>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <p><strong>Nährstoffe</strong>: Phosphor- und kaliumreicher Dünger mit CalMag. Hoher Bedarf an Phosphor, Kalium, Kalzium, Bor, Zink.</p>
-                    <p><strong>EC-Wert</strong>: 1.5–2.0 mS/cm. Fördert Blütenbildung und Fruchtsetzung.</p>
-                    <p><strong>Warum?</strong> Phosphor und Kalium unterstützen Blütenbildung und Energieübertragung, Bor verhindert Blütenfall, Kalzium stärkt Blüten (Chen et al., 2025).</p>
-                </li>
-            </ul>
-            
-            <h3>Praktische Anleitungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <ol>
-                        <li>Verwende leichten Dünger mit 25–50 % der empfohlenen Dosis.</li>
-                        <li>Füge CalMag hinzu (0.5–1 ml/L) für Kalzium und Magnesium. Bei gelben Blättern 0.1 ml/L Eisen-Chelat hinzufügen.</li>
-                        <li>Miss den EC-Wert. Ziel: 0.4–0.8 mS/cm. Mische CalMag zuerst, dann andere Nährstoffe.</li>
-                        <li>Dünge nur bei jeder dritten Bewässerung, um Überdüngung zu vermeiden.</li>
-                    </ol>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <ol>
-                        <li>Verwende stickstoffreichen Dünger mit 50–75 % der empfohlenen Dosis.</li>
-                        <li>Füge CalMag (1–2 ml/L) und 0.1–0.2 ml/L Mikronährstoffmischung (Fe, Mn, Zn) hinzu.</li>
-                        <li>Miss den EC-Wert. Ziel: 0.8–1.5 mS/cm. CalMag erhöht den EC um 0.2–0.4 mS/cm.</li>
-                        <li>Dünge bei jeder zweiten Bewässerung.</li>
-                    </ol>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <ol>
-                        <li>Verwende phosphor- und kaliumreichen Dünger mit 75–100 % der empfohlenen Dosis.</li>
-                        <li>Füge CalMag (1–2 ml/L) und 0.1–0.2 ml/L Bor und Zink hinzu.</li>
-                        <li>Miss den EC-Wert. Ziel: 1.5–2.0 mS/cm. Spüle alle 2–3 Wochen, um Salzablagerungen zu vermeiden.</li>
-                        <li>Dünge bei jeder Bewässerung, aber spüle regelmäßig.</li>
-                    </ol>
-                </li>
-            </ul>
-            
-            <h3>Fehlerbehebung</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>: Verbrannte Wurzeln deuten auf zu hohen EC-Wert. Spüle mit reinem Wasser (pH 5.8–6.2).</li>
-                <li><strong>Vegetative Phase</strong>: Gelbe Blätter können auf Stickstoff-, Magnesium- oder Eisenmangel hinweisen. Erhöhe die Düngung oder füge CalMag/Eisen hinzu.</li>
-                <li><strong>Blütephase</strong>: Blütenfall kann durch Bor- oder Kaliummangel verursacht werden. Füge Bor hinzu und überprüfe den EC-Wert.</li>
-            </ul>
-            
-            <h3>Hinweis</h3>
-            <p>Passe die Nährstoffe an die Pflanzenart und Phase an. Überwache den EC-Wert und pH-Wert (5.8–6.2), um Überdüngung oder Mängel zu vermeiden.</p>
+                    <h4>Vegetative Phase</h4>
+                    <ul>
+                        <li><strong>Nährstoffzugabe:</strong> Stickstoffreichen Dünger (z. B. NPK 3-1-2) in mittlerer Konzentration verwenden.</li>
+                        <li><strong>pH-Anpassung:</strong> Regelmäßige pH-Messung und Anpassung mit pH-Senker/Heber.</li>
+                        <li><strong>Überwachung:</strong> Wöchentliche EC-Messung zur Optimierung der Nährstoffkonzentration.</li>
+                    </ul>
+                    <h4>Blütephase</h4>
+                    <ul>
+                        <li><strong>Nährstoffzugabe:</strong> Phosphor- und kaliumreichen Dünger (z. B. NPK 1-3-2) verwenden.</li>
+                        <li><strong>pH-Anpassung:</strong> Tägliche pH-Kontrolle, da Schwankungen die Blütenbildung beeinträchtigen.</li>
+                        <li><strong>Überwachung:</strong> EC regelmäßig prüfen, um Nährstoffstress zu vermeiden.</li>
+                        <li><strong>Spülung:</strong> In den letzten 1–2 Wochen mit reinem Wasser spülen, um Salzablagerungen zu entfernen.</li>
+                    </ul>
+                    <h3>🚨 Fehlerdiagnose & Fehlerbehebung</h3>
+                    <table>
+                        <tr>
+                            <th>Symptom</th>
+                            <th>Ursache</th>
+                            <th>Lösung</th>
+                        </tr>
+                        <tr>
+                            <td>Gelbe Blätter (Chlorose)</td>
+                            <td>Stickstoffmangel oder pH-Blockade</td>
+                            <td>Stickstoffdünger hinzufügen, pH anpassen (5.5–6.0).</td>
+                        </tr>
+                        <tr>
+                            <td>Verbrannte Blattspitzen</td>
+                            <td>Überdüngung (EC >2.2 mS/cm)</td>
+                            <td>EC reduzieren, mit reinem Wasser spülen.</td>
+                        </tr>
+                        <tr>
+                            <td>Wachstumsstopp</td>
+                            <td>pH außerhalb des Zielbereichs</td>
+                            <td>pH messen und korrigieren (5.5–6.2).</td>
+                        </tr>
+                        <tr>
+                            <td>Dunkle Flecken auf Blättern</td>
+                            <td>Kalium- oder Magnesiummangel</td>
+                            <td>Kalium/Magnesium-Dünger zuführen.</td>
+                        </tr>
+                        <tr>
+                            <td>Schwache Blütenbildung</td>
+                            <td>Phosphormangel</td>
+                            <td>Phosphorreichen Dünger (z. B. NPK 1-3-2) verwenden.</td>
+                        </tr>
+                    </table>
+                    <h3>🧠 Hinweis</h3>
+                    <p>Verwende präzise Sensorik für pH und EC (z. B. Bluelab pH Pen, EC-Meter). Empfohlene Maßnahmen:</p>
+                    <ul>
+                        <li>Tägliche pH- und EC-Messung im Nährstofftank.</li>
+                        <li>Automatisierte Überwachung mit Grow Controller für Echtzeit-Daten.</li>
+                        <li>Regelmäßige Spülung des Substrats, um Salzablagerungen zu verhindern.</li>
+                        <li>Kalibrierung der Sensoren alle 2–3 Monate für genaue Messungen.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -390,6 +452,14 @@
                 }
             });
         });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
     </script>
 </body>
 </html>
