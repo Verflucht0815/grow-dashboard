@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -144,19 +105,80 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: block;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .sub-section h4 {
+            color: #2ecc71;
+            font-size: 1em;
+            margin: 10px 0;
+        }
+        .sub-section p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .sub-section ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .sub-section ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .sub-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .sub-section table th,
+        .sub-section table td {
+            border: 1px solid #4a5657;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .sub-section table th {
+            background-color: #2ecc71;
+            color: #1c2526;
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +207,22 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .sub-section h3 {
+                font-size: 1em;
+            }
+            .sub-section h4 {
+                font-size: 0.9em;
+            }
+            .sub-section p,
+            .sub-section ul li,
+            .sub-section table th,
+            .sub-section table td {
+                font-size: 0.8em;
+            }
+            .sub-section table th,
+            .sub-section table td {
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -192,91 +230,218 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-<div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
-        <h2>Klima-Anleitung</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Das Klima, einschließlich Temperatur, Luftfeuchtigkeit und CO₂-Konzentration, ist entscheidend für optimales Pflanzenwachstum. Diese Anleitung bietet detaillierte Informationen zur Steuerung des Klimas mit dem Grow Controller.</p>
-            <h3>Detaillierte Erklärungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <p><strong>Temperatur</strong>: 22–26 °C. Fördert Keimung und Wurzelbildung.</p>
-                    <p><strong>Luftfeuchtigkeit</strong>: 70–80 %. Hohe Feuchtigkeit unterstützt empfindliche Keimlinge.</p>
-                    <p><strong>CO₂</strong>: 400–600 ppm. Umgebungs-CO₂ ist ausreichend.</p>
-                    <p><strong>Warum?</strong> Hohe Luftfeuchtigkeit und moderate Temperaturen fördern die Keimung, während CO₂ in dieser Phase weniger kritisch ist (Fernandez et al., 2025).</p>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <p><strong>Temperatur</strong>: 24–28 °C. Unterstützt schnelles Blattwachstum.</p>
-                    <p><strong>Luftfeuchtigkeit</strong>: 50–70 %. Reduziert das Risiko von Schimmel.</p>
-                    <p><strong>CO₂</strong>: 800–1200 ppm. Erhöhte CO₂-Werte steigern die Photosynthese.</p>
-                    <p><strong>Warum?</strong> Höhere Temperaturen und CO₂ fördern die Photosynthese und das vegetative Wachstum (Liu et al., 2024).</p>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <p><strong>Temperatur</strong>: 20–26 °C. Fördert Blütenbildung und verhindert Hitzestress.</p>
-                    <p><strong>Luftfeuchtigkeit</strong>: 40–50 %. Niedrige Feuchtigkeit reduziert Schimmelrisiken.</p>
-                    <p><strong>CO₂</strong>: 1000–1500 ppm. Maximiert Blütenentwicklung.</p>
-                    <p><strong>Warum?</strong> Niedrigere Temperaturen und Luftfeuchtigkeit sowie hohe CO₂-Werte fördern die Blütenqualität (Chen et al., 2025).</p>
-                </li>
-            </ul>
-            <h3>Praktische Anleitungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <ol>
-                        <li>Stelle die Temperatur auf 22–26 °C ein.</li>
-                        <li>Halte die Luftfeuchtigkeit bei 70–80 % mit einem Luftbefeuchter.</li>
-                        <li>Überwache CO₂ mit einem Sensor (Ziel: 400–600 ppm).</li>
-                    </ol>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <ol>
-                        <li>Stelle die Temperatur auf 24–28 °C ein.</li>
-                        <li>Halte die Luftfeuchtigkeit bei 50–70 %.</li>
-                        <li>Füge CO₂ hinzu (Ziel: 800–1200 ppm) mit einem CO₂-Controller.</li>
-                    </ol>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <ol>
-                        <li>Stelle die Temperatur auf 20–26 °C ein.</li>
-                        <li>Halte die Luftfeuchtigkeit bei 40–50 % mit Entfeuchtern.</li>
-                        <li>Erhöhe CO₂ auf 1000–1500 ppm.</li>
-                    </ol>
-                </li>
-            </ul>
-            <h3>Fehlerbehebung</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>: Niedrige Keimrate kann auf zu niedrige Temperatur oder Feuchtigkeit hinweisen.</li>
-                <li><strong>Vegetative Phase</strong>: Langsames Wachstum kann auf unzureichende CO₂-Werte oder zu hohe Feuchtigkeit hinweisen.</li>
-                <li><strong>Blütephase</strong>: Schimmelbildung deutet auf zu hohe Luftfeuchtigkeit. Reduziere die Feuchtigkeit und erhöhe die Lüftung.</li>
-            </ul>
-            <h3>Hinweis</h3>
-            <p>Verwende Sensoren für Temperatur, Luftfeuchtigkeit und CO₂, um präzise Werte zu überwachen. Der Grow Controller kann diese Parameter automatisch steuern.</p>
+        <h2>🌡️ Klima-Anleitung</h2>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('introductionSection')">Einführung <span class="arrow">▼</span></label>
+                <div id="introductionSection" class="sub-section">
+                    <p>Das Mikroklima im Growraum ist einer der wichtigsten Umweltfaktoren für gesundes Pflanzenwachstum und maximale Ertragsbildung. Temperatur, Luftfeuchtigkeit und CO₂-Konzentration beeinflussen nicht nur die Photosyntheseleistung, sondern auch Wasserhaushalt, Nährstoffaufnahme, Enzymaktivität und Stressresistenz. Bereits geringe Abweichungen vom optimalen Bereich können zu Ertragseinbußen oder physiologischen Störungen führen.</p>
+                    <p>Ein präzise gesteuertes Klima ist daher essenziell – vor allem im Indoor-Anbau, wo natürliche Luftzirkulation, Temperaturzyklen und CO₂-Konzentrationen fehlen. Der Grow Controller übernimmt hier die zentrale Rolle: Er regelt Lüfter, Heizung, Befeuchter, Entfeuchter und CO₂-Zufuhr in Echtzeit und auf Basis von Sensorwerten und definierten Zielprofilen.</p>
+                    <p>Ziel ist ein phasenangepasstes, stabiles und physiologisch optimales Klima für jede Entwicklungsstufe.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('parametersSection')">Definitionen der Klimaparameter <span class="arrow">▼</span></label>
+                <div id="parametersSection" class="sub-section">
+                    <h3>Temperatur (°C)</h3>
+                    <p>Beeinflusst Enzymgeschwindigkeit, Verdunstung, Wurzelaktivität und Transpiration. Überhitzung führt zu oxidativem Stress, Unterkühlung verlangsamt Zellprozesse.</p>
+                    <h3>Luftfeuchtigkeit (rLF, %)</h3>
+                    <p>Reguliert die Transpirationsrate über die Stomata. Zu hohe rLF erhöht Schimmelrisiko, zu niedrige führt zu Stress durch Wasserverlust.</p>
+                    <h3>CO₂-Konzentration (ppm)</h3>
+                    <p>Maß für das Angebot an Kohlenstoffdioxid zur Photosynthese. Höhere Konzentrationen fördern Wachstumsleistung – aber nur bei ausreichendem Licht und Temperatur.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('targetsSection')">📈 Detaillierte Zielwerte pro Phase <span class="arrow">▼</span></label>
+                <div id="targetsSection" class="sub-section">
+                    <h3>🌱 Keimlingsphase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Temperatur</td>
+                            <td>22–26 °C</td>
+                            <td>Warmes Mikroklima aktiviert Enzyme für Zellteilung und Wurzelbildung. Unter 20 °C wird die Keimung gehemmt, über 28 °C droht Hitzeschock.</td>
+                        </tr>
+                        <tr>
+                            <td>Luftfeuchtigkeit</td>
+                            <td>70–80 %</td>
+                            <td>Junge Pflanzen können ihren Wasserverlust kaum selbst regulieren. Hohe rLF schützt vor Austrocknung, erhöht jedoch das Schimmelrisiko ohne Luftbewegung.</td>
+                        </tr>
+                        <tr>
+                            <td>CO₂</td>
+                            <td>400–600 ppm</td>
+                            <td>Kein erhöhter CO₂-Bedarf. Umgebungswerte reichen aus, da Photosynthese noch nicht limitiert ist.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>In dieser Phase steht die Entwicklung von Wurzel und Hypokotyl im Vordergrund. Die Pflanze nimmt Wasser hauptsächlich über Osmose auf. Hohe rLF fördert das Zellwachstum, eine stabile Temperatur die Enzymaktivität.</p>
+                    <h3>🌿 Vegetative Phase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Temperatur</td>
+                            <td>24–28 °C</td>
+                            <td>Optimal für Photosynthese, Zellstreckung und vegetatives Wachstum. >29 °C reduziert die Stomatabewegung, <22 °C senkt die Stoffwechselrate deutlich.</td>
+                        </tr>
+                        <tr>
+                            <td>Luftfeuchtigkeit</td>
+                            <td>50–70 %</td>
+                            <td>Balanciert zwischen Transpirationskontrolle und Schimmelprävention. Bei hoher Blattmasse ist eine gute Luftzirkulation entscheidend.</td>
+                        </tr>
+                        <tr>
+                            <td>CO₂</td>
+                            <td>800–1200 ppm</td>
+                            <td>Aktivierte CO₂-Düngung steigert das Wachstum bei gleichzeitig hoher Lichtintensität (>400 µmol/m²/s PPFD). Unter 800 ppm wird die Photosynthese limitiert.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>Die Pflanze hat nun ein aktives Transpirationssystem. CO₂ wird zum begrenzenden Faktor für die Biomasseproduktion. Ein stabiles Temperatur-RLF-Verhältnis beugt Stress vor und stabilisiert das VPD (Vapour Pressure Deficit).</p>
+                    <h3>🌸 Blütephase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Zielwert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Temperatur</td>
+                            <td>20–26 °C (tags), 18–22 °C (nachts)</td>
+                            <td>Niedrigere Temperaturen fördern die Synthese von Terpenen und Harz. Oberhalb von 27 °C sinkt die Blütendichte; Nachtabsenkung <22 °C erhöht Qualität.</td>
+                        </tr>
+                        <tr>
+                            <td>Luftfeuchtigkeit</td>
+                            <td>40–50 %</td>
+                            <td>Reduziert massiv das Risiko für Botrytis und Mehltau. Entscheidend bei dichter Blütenstruktur, vor allem in den letzten 3 Wochen.</td>
+                        </tr>
+                        <tr>
+                            <td>CO₂</td>
+                            <td>1000–1500 ppm</td>
+                            <td>Maximiert Blütenentwicklung, aber nur bei hoher Lichtintensität und korrektem Temperaturprofil. CO₂ muss in der Lichtphase verfügbar sein.</td>
+                        </tr>
+                    </table>
+                    <p><strong>Warum?</strong></p>
+                    <p>Die Pflanze maximiert nun Kohlenhydrat- und Blütenproduktion. Sie ist empfindlich gegenüber Klimaschwankungen und Schimmel. CO₂ stimuliert Zellsynthese, während niedrige Luftfeuchte die Oberflächenverdunstung optimiert.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('implementationSection')">⚙️ Praktische Anleitung & Fehlerdiagnose <span class="arrow">▼</span></label>
+                <div id="implementationSection" class="sub-section">
+                    <h3>Praktische Anleitung</h3>
+                    <h4>Keimlingsphase</h4>
+                    <ul>
+                        <li><strong>Temperatursteuerung:</strong> Heizmatten mit Thermostat oder Growbox-Heizung (z. B. 80 W-Röhren).</li>
+                        <li><strong>Luftfeuchte:</strong> Luftbefeuchter mit Hygrostat oder Mini-Gewächshaus mit transparenter Haube.</li>
+                        <li><strong>CO₂:</strong> Kein aktives System nötig. Frischluftzufuhr reicht aus.</li>
+                        <li><strong>Lüftung:</strong> Sehr schwache Umluft zur Vermeidung von Kondenswasserbildung auf den Blättern.</li>
+                    </ul>
+                    <h4>Vegetative Phase</h4>
+                    <ul>
+                        <li><strong>Temperaturregelung:</strong> Temperatursteuerung über Zuluft, Umluft, Abluft oder Kühlung (z. B. EC-Lüfter mit Temperatursensor).</li>
+                        <li><strong>Luftfeuchtigkeit:</strong> Luftbefeuchter/Hygrostat oder Abluftsteuerung bei zu hoher Feuchtigkeit.</li>
+                        <li><strong>CO₂:</strong> Aktivsystem (CO₂-Flasche + Magnetventil) mit CO₂-Controller oder Generator, auf Tageslichtphasen abgestimmt.</li>
+                        <li><strong>Lüftung:</strong> Umluftventilatoren auf mittlerer Stufe. Zuluftfilterung empfohlen.</li>
+                    </ul>
+                    <h4>Blütephase</h4>
+                    <ul>
+                        <li><strong>Temperaturregelung:</strong> Nachtabsenkung über Heizungs-/Kühlungszyklen.</li>
+                        <li><strong>Luftfeuchte:</strong> Professioneller Entfeuchter, optional kombinierbar mit Hygrostat-Modul.</li>
+                        <li><strong>CO₂:</strong> Konzentration tagsüber bei Lichtphase regeln (1000–1500 ppm). Nachts deaktivieren.</li>
+                        <li><strong>Lüftung:</strong> Mehrstufige Umluft plus starke Abluft. Besonders wichtig: Luftaustausch und Luftverwirbelung innerhalb der Blütenzone.</li>
+                    </ul>
+                    <h3>🚨 Fehlerdiagnose & Fehlerbehebung</h3>
+                    <table>
+                        <tr>
+                            <th>Symptom</th>
+                            <th>Ursache</th>
+                            <th>Lösung</th>
+                        </tr>
+                        <tr>
+                            <td>Keimung verzögert</td>
+                            <td>Temp <22 °C oder rLF <60 %</td>
+                            <td>Heizmatte oder Haube mit Befeuchtung einsetzen</td>
+                        </tr>
+                        <tr>
+                            <td>Schimmel an Sämlingen</td>
+                            <td>rLF >85 %, keine Umluft</td>
+                            <td>Mikroventilator einsetzen, Feuchte senken</td>
+                        </tr>
+                        <tr>
+                            <td>Wachstumsstopp Vegetation</td>
+                            <td>Temp <22 °C oder CO₂ <600 ppm</td>
+                            <td>Temperatur anpassen, CO₂-System prüfen</td>
+                        </tr>
+                        <tr>
+                            <td>Hitzestress: Blätter eingerollt</td>
+                            <td>>29 °C, zu geringe Luftzirkulation</td>
+                            <td>Abluft erhöhen, Lichtabstand prüfen</td>
+                        </tr>
+                        <tr>
+                            <td>Schimmel an Buds</td>
+                            <td>rLF >55 %, Luft steht</td>
+                            <td>Entfeuchter + Ventilatoren kombinieren</td>
+                        </tr>
+                        <tr>
+                            <td>Wenig Harz, blasse Buds</td>
+                            <td>zu warm nachts (>24 °C), CO₂ zu niedrig</td>
+                            <td>Temperatur senken, CO₂ erhöhen</td>
+                        </tr>
+                        <tr>
+                            <td>Gelbverfärbung trotz Dünger</td>
+                            <td>Klimastress → Nährstoffaufnahme gestört</td>
+                            <td>VPD kontrollieren, Klima stabilisieren</td>
+                        </tr>
+                    </table>
+                    <h3>🧠 Hinweis</h3>
+                    <p>Setze präzise Sensorik für Temperatur, Luftfeuchte und CO₂ ein (z. B. SHT85, MH-Z19C, Sensirion CO₂-Sensoren). Verwende mindestens:</p>
+                    <ul>
+                        <li>1 Temperatur-/Feuchtesensor im Blätterdach</li>
+                        <li>1 CO₂-Sensor mittig im Raum</li>
+                        <li>1 zusätzlicher Sensor auf Bodenniveau für Toleranzanalyse</li>
+                    </ul>
+                    <p>Der Grow Controller sollte automatisiert auf diese Werte reagieren, z. B. durch:</p>
+                    <ul>
+                        <li>PID-Regelung für Lüfter und Heizung</li>
+                        <li>Zielwerteinstellung pro Phase</li>
+                        <li>Alarm bei Über-/Unterschreitung</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -297,6 +462,14 @@
                 }
             });
         });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
     </script>
 </body>
 </html>
