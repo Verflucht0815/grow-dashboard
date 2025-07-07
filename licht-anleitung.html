@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grow Controller - Licht Anleitung</title>
+    <title>Grow Controller - Licht</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -144,19 +105,75 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
-        .content h3 {
-            color: #2ecc71;
-            margin-top: 20px;
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
         }
-        .content p, .content ul, .content ol {
-            color: #e0e0e0;
-            line-height: 1.6;
-        }
-        .content ul, .content ol {
-            padding-left: 20px;
-        }
-        .content li {
+        .data label {
+            display: block;
+            font-weight: bold;
             margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .sub-section h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .sub-section p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .sub-section ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .sub-section ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .sub-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .sub-section table th,
+        .sub-section table td {
+            border: 1px solid #4a5657;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .sub-section table th {
+            background-color: #2ecc71;
+            color: #1c2526;
+            font-weight: bold;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -185,6 +202,19 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
+            .sub-section h3 {
+                font-size: 1em;
+            }
+            .sub-section p,
+            .sub-section ul li,
+            .sub-section table th,
+            .sub-section table td {
+                font-size: 0.8em;
+            }
+            .sub-section table th,
+            .sub-section table td {
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -192,135 +222,345 @@
     <div class="header">
         <h1>Grow Controller</h1>
     </div>
-<div class="nav">
-    <ul>
-        <li><a href="index.html">Klima</a></li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Steuerung</a>
-            <div class="dropdown-content">
-                <a href="bewasserung.html">Bewässerung</a>
-                <a href="licht.html">Licht</a>
-                <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                <a href="luftung.html">Lüftung</a>
-            </div>
-        </li>
-        <li class="dropdown">
-            <a href="#" class="dropbtn">Anleitungen</a>
-            <div class="dropdown-content">
-                <a href="substrat.html">Substrat</a>
-                <a href="wasser.html">Wasser</a>
-                <a href="licht-anleitung.html">Licht</a>
-                <a href="klima-anleitung.html">Klima</a>
-                <a href="nahrstoffe.html">Nährstoffe</a>
-                <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                <a href="anwendung.html">Anwendung</a>
-            </div>
-        </li>
-    </ul>
-</div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <div class="container">
-        <h2>Licht-Anleitung</h2>
-        <div class="content">
-            <h3>Einführung</h3>
-            <p>Licht steuert die Photosynthese durch Photosynthetic Photon Flux Density (PPFD), Photosynthetic Photon Flux (PPF), Daily Photon Integral (DPI) und das Lichtspektrum. Diese Parameter beeinflussen Wachstum, Blütenbildung und Ertrag. Jede Phase erfordert spezifische Lichtbedingungen, um die Photosynthese zu optimieren (Wang et al., 2025).</p>
-            
-            <h3>Definitionen und Messmethoden</h3>
-            <ul>
-                <li><strong>PPFD (Photosynthetic Photon Flux Density)</strong>:
-                    <p><strong>Definition</strong>: Misst die Anzahl der Photonen (400–700 nm) pro Quadratmeter pro Sekunde (µmol/m²/s), die auf die Pflanzenoberfläche treffen. PPFD ist ein direkter Indikator für die Lichtintensität, die für die Photosynthese verfügbar ist.</p>
-                    <p><strong>Messung</strong>: Verwende ein PAR-Meter (z. B. Apogee MQ-500) am Blattdach. Der Wert variiert mit dem Lampenabstand und der Lichtverteilung (z. B. Reflektoren).</p>
-                    <p><strong>Einflussfaktoren</strong>: Lampentyp (LED, HPS), Abstand, Reflektoren und Streuung. Ungleichmäßige Verteilung kann Hotspots oder Schatten verursachen.</p>
-                    <p><strong>Warum?</strong> PPFD bestimmt die Photosyntheserate. Zu niedrige Werte begrenzen das Wachstum, während zu hohe Werte Lichtstress verursachen (Kim & Lee, 2024).</p>
-                </li>
-                <li><strong>PPF (Photosynthetic Photon Flux)</strong>:
-                    <p><strong>Definition</strong>: Gesamtanzahl der Photonen (400–700 nm), die eine Lichtquelle pro Sekunde emittiert (µmol/s). PPF beschreibt die Gesamtleistung einer Lampe.</p>
-                    <p><strong>Messung</strong>: Wird vom Lampenhersteller angegeben oder mit einem Integrating Sphere gemessen. Für kleine Flächen (z. B. 0.5 m²) ist PPF proportional zur PPFD.</p>
-                    <p><strong>Einflussfaktoren</strong>: Lampenleistung (Watt), Effizienz (µmol/J) und Spektrumanpassung. LEDs haben oft höhere PPF-Effizienz als HPS.</p>
-                    <p><strong>Warum?</strong> PPF hilft bei der Auswahl der richtigen Lampe für die Anbaufläche und Phase (Rodriguez & Patel, 2025).</p>
-                </li>
-                <li><strong>DPI (Daily Photon Integral)</strong>:
-                    <p><strong>Definition</strong>: Gesamtmenge der Photonen pro Quadratmeter pro Tag (mol/m²/Tag). Berechnet als: PPFD × Lichtstunden × 3600 / 1.000.000.</p>
-                    <p><strong>Messung</strong>: Berechne aus PPFD-Messungen und Photoperiode. Beispiel: 600 µmol/m²/s bei 12 Stunden = 600 × 12 × 3600 / 1.000.000 = 25.92 mol/m²/Tag.</p>
-                    <p><strong>Einflussfaktoren</strong>: Photoperiode, PPFD und Lichtgleichmäßigkeit. Längere Photoperioden erhöhen den DPI.</p>
-                    <p><strong>Warum?</strong> DPI quantifiziert die kumulative Lichtmenge, die das Wachstum über den Tag bestimmt (Gomez et al., 2024).</p>
-                </li>
-                <li><strong>Spektrum</strong>:
-                    <p><strong>Definition</strong>: Verteilung der Lichtwellenlängen (nm). Photosynthetisch aktive Strahlung (PAR) umfasst 400–700 nm, aber spezifische Wellenlängen haben unterschiedliche Effekte.</p>
-                    <p><strong>Messung</strong>: Spektroradiometer oder Herstellerangaben. LEDs und HPS-Lampen haben unterschiedliche Spektren, die für bestimmte Phasen optimiert werden können.</p>
-                    <p><strong>Einflussfaktoren</strong>: Lampentyp, Steuerungssysteme und Pflanzenart. Zum Beispiel fördert UV (350–400 nm) Sekundärmetabolite.</p>
-                    <p><strong>Warum?</strong> Unterschiedliche Wellenlängen beeinflussen Phototropismus, Chlorophyllproduktion und Blütenbildung (Li et al., 2025).</p>
-                </li>
-            </ul>
-            
-            <h3>Detaillierte Erklärungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <p><strong>PPFD</strong>: 100–200 µmol/m²/s. Niedrige Intensität schützt empfindliche Keimlinge vor Lichtstress.</p>
-                    <p><strong>PPF</strong>: 50–100 µmol/s (für 0.5 m²). Geringe Leistung ist ausreichend für kleine Flächen.</p>
-                    <p><strong>DPI</strong>: 5–10 mol/m²/Tag (bei 16–18 Stunden). Fördert gesundes Wachstum ohne Überlastung.</p>
-                    <p><strong>Spektrum</strong>: Verwende Lampen mit einem blau-dominanten Spektrum (400–500 nm), um Phototropismus und Wurzelbildung zu fördern. Vollspektrum-LEDs oder Leuchtstofflampen sind geeignet.</p>
-                    <p><strong>Photoperiode</strong>: 16–18 Stunden Licht, 6–8 Stunden Dunkel.</p>
-                    <p><strong>Warum?</strong> Keimlinge haben eine geringe Photosynthese-Kapazität. Blaues Licht fördert die Zellteilung, während niedrige PPFD/DPI Stress vermeiden (Kim & Lee, 2024).</p>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <p><strong>PPFD</strong>: 300–600 µmol/m²/s. Unterstützt schnelles Blatt- und Stängelwachstum.</p>
-                    <p><strong>PPF</strong>: 150–300 µmol/s (für 0.5 m²). Liefert ausreichende Photonen für dichte Vegetation.</p>
-                    <p><strong>DPI</strong>: 15–25 mol/m²/Tag (bei 18 Stunden). Maximiert das vegetative Wachstum.</p>
-                    <p><strong>Spektrum</strong>: Verwende Lampen mit einem blau-dominanten Spektrum (400–500 nm), um Chlorophyllproduktion und kompaktes Wachstum zu fördern. Vollspektrum-LEDs oder Metalldampflampen sind geeignet.</p>
-                    <p><strong>Photoperiode</strong>: 18 Stunden Licht, 6 Stunden Dunkel.</p>
-                    <p><strong>Warum?</strong> Höhere PPFD/DPI und blaues Licht fördern die Blattentwicklung und Photosynthese, was für starkes Wachstum entscheidend ist (Rodriguez & Patel, 2025).</p>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <p><strong>PPFD</strong>: 600–1000 µmol/m²/s. Fördert Blütenbildung und Fruchtsetzung.</p>
-                    <p><strong>PPF</strong>: 300–500 µmol/s (für 0.5 m²). Unterstützt hohe Photosynthese-Raten.</p>
-                    <p><strong>DPI</strong>: 25–40 mol/m²/Tag (bei 12 Stunden). Maximiert die Blütenentwicklung.</p>
-                    <p><strong>Spektrum</strong>: Verwende Lampen mit einem rot-dominanten Spektrum (600–700 nm), um Phytochrome zu aktivieren und Blütenbildung zu fördern. HPS-Lampen oder LEDs mit erhöhtem Rotanteil sind ideal.</p>
-                    <p><strong>Photoperiode</strong>: 12 Stunden Licht, 12 Stunden Dunkel.</p>
-                    <p><strong>Warum?</strong> Rotes Licht und hohe PPFD/DPI fördern die Blütenbildung durch Aktivierung von Blütenhormonen und erhöhte Energieversorgung (Gomez et al., 2024).</p>
-                </li>
-            </ul>
-            
-            <h3>Praktische Anleitungen</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>:
-                    <ol>
-                        <li>Verwende Lampen mit einem blau-dominanten oder Vollspektrum (z. B. Leuchtstofflampen oder Vollspektrum-LEDs).</li>
-                        <li>Miss die PPFD mit einem PAR-Meter am Blattdach. Ziel: 100–200 µmol/m²/s (Abstand: 40–60 cm).</li>
-                        <li>Berechne den DPI: PPFD × Lichtstunden × 3600 / 1.000.000. Ziel: 5–10 mol/m²/Tag.</li>
-                        <li>Programmiere den Grow Controller für 16–18 Stunden Licht.</li>
-                        <li>Überprüfe die PPFD wöchentlich und passe den Lampenabstand an, um gleichmäßige Verteilung zu gewährleisten.</li>
-                    </ol>
-                </li>
-                <li><strong>Vegetative Phase</strong>:
-                    <ol>
-                        <li>Verwende Lampen mit einem blau-dominanten oder Vollspektrum (z. B. Vollspektrum-LEDs oder Metalldampflampen).</li>
-                        <li>Stelle die PPFD auf 300–600 µmol/m²/s ein (Abstand: 30–50 cm).</li>
-                        <li>Berechne den DPI. Ziel: 15–25 mol/m²/Tag bei 18 Stunden Licht.</li>
-                        <li>Programmiere 18 Stunden Licht, 6 Stunden Dunkel.</li>
-                        <li>Kontrolliere die Temperatur, da hohe PPFD-Werte Wärme erzeugen können. Nutze Reflektoren für gleichmäßige Verteilung.</li>
-                    </ol>
-                </li>
-                <li><strong>Blütephase</strong>:
-                    <ol>
-                        <li>Verwende Lampen mit einem rot-dominanten Spektrum (z. B. HPS oder LEDs mit erhöhtem Rotanteil).</li>
-                        <li>Stelle die PPFD auf 600–1000 µmol/m²/s ein (Abstand: 30–60 cm).</li>
-                        <li>Berechne den DPI. Ziel: 25–40 mol/m²/Tag bei 12 Stunden Licht.</li>
-                        <li>Programmiere 12 Stunden Licht, 12 Stunden Dunkel.</li>
-                        <li>Überprüfe die PPFD wöchentlich mit einem PAR-Meter und vermeide Lichtverbrennungen durch zu geringen Abstand.</li>
-                    </ol>
-                </li>
-            </ul>
-            
-            <h3>Fehlerbehebung</h3>
-            <ul>
-                <li><strong>Keimlingsphase</strong>: Langgestreckte Keimlinge deuten auf zu niedrige PPFD. Verringere den Lampenabstand oder erhöhe die Intensität.</li>
-                <li><strong>Vegetative Phase</strong>: Schwaches Blattwachstum kann auf zu niedrige PPFD oder ungeeignetes Spektrum hinweisen. Erhöhe die PPFD und überprüfe, ob die Lampe ausreichend blaues Licht liefert.</li>
-                <li><strong>Blütephase</strong>: Wenig Blütenbildung kann durch zu lange Photoperiode oder unzureichendes rotes Licht verursacht werden. Stelle auf 12/12 und wähle eine rot-dominante Lampe.</li>
-            </ul>
-            
-            <h3>Hinweis</h3>
-            <p>Verwende ein PAR-Meter für präzise PPFD-Messungen und ein Spektroradiometer für Spektrumanalysen, falls verfügbar. Wähle Lampen basierend auf den Anforderungen der Pflanzenart und Phase, z. B. Vollspektrum-LEDs für Keimlinge oder HPS für die Blütephase.</p>
+        <h2>Licht</h2>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('introductionSection')">Einführung <span class="arrow">▼</span></label>
+                <div id="introductionSection" class="sub-section">
+                    <p>Licht ist der primäre Energielieferant im pflanzlichen Stoffwechsel und einer der bedeutendsten Umweltfaktoren im kontrollierten Indoor-Anbau. Ohne ausreichendes und qualitativ hochwertiges Licht ist keine effektive Photosynthese möglich – der Prozess, bei dem Kohlendioxid (CO₂) und Wasser mithilfe von Lichtenergie in Glukose und Sauerstoff umgewandelt werden. Daraus entstehen Zellbausteine, Speicherstoffe und sekundäre Metabolite.</p>
+                    <p>Anders als im Außenanbau, wo Sonnenlicht nahezu alle erforderlichen Spektralbereiche in ausreichender Intensität liefert, müssen im Indoor-Bereich alle Lichtqualitäten und -quantitäten künstlich und präzise bereitgestellt werden. Eine unpassende Beleuchtung führt direkt zu Wachstumsstörungen, Entwicklungsverzögerungen oder Stressreaktionen.</p>
+                    <p>Dabei geht es nicht nur um die reine Lichtmenge, sondern auch um:</p>
+                    <ul>
+                        <li>die Verteilung der Lichtenergie über die Fläche,</li>
+                        <li>die Dauer der täglichen Lichtzufuhr (Photoperiode),</li>
+                        <li>das Lichtspektrum, das bestimmte Pflanzenhormone und Wachstumsprozesse aktiviert,</li>
+                        <li>sowie die gleichmäßige Ausleuchtung zur Vermeidung von Hotspots und Schattenzonen.</li>
+                    </ul>
+                    <p>Ziel ist es, die Lichtbilanz jeder Phase auf den Bedarf der Pflanzen abzustimmen:</p>
+                    <ul>
+                        <li>In der Keimlingsphase sollen fragile Strukturen vor Stress geschützt werden.</li>
+                        <li>In der vegetativen Phase liegt der Fokus auf kompakter Struktur, Blattmasse und internodalem Wachstum.</li>
+                        <li>In der Blütephase muss ausreichend Energie für Blütenbildung und -ausreifung bereitgestellt werden, bei möglichst hoher Effizienz.</li>
+                    </ul>
+                    <p>Dabei kommen neben intensitätsgesteuerten Systemen auch spektrale Anpassungen (z. B. LED mit selektiver Kanalsteuerung) zum Einsatz, die es ermöglichen, je nach Wachstumsphase gezielt Wachstumshormone (z. B. Auxin, Cytokinin, Florigen) zu beeinflussen.</p>
+                    <p>Zusätzlich wirkt Licht indirekt auf:</p>
+                    <ul>
+                        <li>Verdunstungsrate (Transpiration) über Stomataregulierung,</li>
+                        <li>Temperaturverteilung (Licht erzeugt Wärme),</li>
+                        <li>Nährstoffaufnahme, die an Photosyntheseleistung gekoppelt ist.</li>
+                    </ul>
+                    <p>Eine durchdachte Lichtsteuerung ist damit die Grundlage für maximale Wuchsleistung, Stabilität und Ertrag im Indoor-Grow.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('definitionsSection')">Definitionen und Messmethoden <span class="arrow">▼</span></label>
+                <div id="definitionsSection" class="sub-section">
+                    <h3>Photosynthetic Photon Flux Density (PPFD)</h3>
+                    <p><strong>Was misst PPFD?</strong></p>
+                    <p>PPFD gibt die Anzahl der Photonen im für die Photosynthese nutzbaren Wellenlängenbereich (400–700 nm) an, die pro Sekunde und Quadratmeter auf die Blattoberfläche treffen. Es ist die wichtigste Kennzahl für die tatsächliche Lichtmenge, die der Pflanze zur Verfügung steht.</p>
+                    <p><strong>Wie wird PPFD gemessen?</strong></p>
+                    <p>Mit einem PAR-Meter (Photosynthetically Active Radiation Meter) am Blattdach oder der Pflanzenspitze. Der gemessene Wert hängt stark vom Abstand der Lichtquelle, deren Streuung und Reflexion ab.</p>
+                    <p><strong>Warum ist PPFD entscheidend?</strong></p>
+                    <p>PPFD beeinflusst direkt die Photosyntheserate. Zu geringe Werte limitieren das Wachstum, während zu hohe Werte zu photoinhibitorischem Stress und Blattverbrennungen führen können.</p>
+                    <h3>Photosynthetic Photon Flux (PPF)</h3>
+                    <p><strong>Was misst PPF?</strong></p>
+                    <p>Die gesamte Anzahl der Photonen (im Bereich 400–700 nm), die eine Lichtquelle pro Sekunde emittiert. Es beschreibt die Gesamtleistung der Lampe unabhängig von der Fläche.</p>
+                    <p><strong>Wie wird PPF bestimmt?</strong></p>
+                    <p>Herstellerangaben oder Messungen mit speziellen Integrating Spheres.</p>
+                    <p><strong>Welche Rolle spielt PPF?</strong></p>
+                    <p>PPF hilft bei der Dimensionierung von Beleuchtungssystemen für bestimmte Flächen und Wachstumsphasen, um ausreichende Photonen bereitzustellen.</p>
+                    <h3>Daily Photon Integral (DPI)</h3>
+                    <p><strong>Was ist DPI?</strong></p>
+                    <p>Die Summe aller Photonen, die pro Quadratmeter und Tag ankommen, gemessen in mol/m²/Tag. Es kombiniert Lichtintensität und Beleuchtungsdauer zu einem Maß für die Tageslichtmenge.</p>
+                    <p><strong>Berechnung:</strong></p>
+                    <p>DPI = PPFD × Beleuchtungsstunden × 3600 / 1.000.000</p>
+                    <p><strong>Warum ist DPI relevant?</strong></p>
+                    <p>Es quantifiziert die gesamte „Tageslichtenergie“, die für die Photosynthese zur Verfügung steht, und ist entscheidend für Wachstum und Blütenbildung.</p>
+                    <h3>Lichtspektrum</h3>
+                    <p><strong>Was beschreibt das Spektrum?</strong></p>
+                    <p>Die Verteilung der Lichtwellenlängen im Bereich von 400–700 nm, dem photosynthetisch aktiven Bereich (PAR).</p>
+                    <p><strong>Wellenlängenbereiche und ihre Wirkungen:</strong></p>
+                    <ul>
+                        <li>Blau (400–500 nm): Fördert Kompaktheit, Blattwachstum und Wurzelentwicklung.</li>
+                        <li>Grün (500–600 nm): Dringt tiefer in das Blatt ein, wichtig für Lichtgleichgewicht, kann die Photomorphogenese beeinflussen.</li>
+                        <li>Rot (600–700 nm): Steuert Blütenbildung, Fruchtentwicklung und Phytochrom-Aktivierung.</li>
+                        <li>UV (unter 400 nm): Regt sekundäre Stoffwechselwege und Abwehrmechanismen an, kann aber auch Stress verursachen.</li>
+                    </ul>
+                    <p><strong>Messung:</strong></p>
+                    <p>Spektroradiometer oder Herstellerdaten.</p>
+                    <p><strong>Warum ist das Spektrum wichtig?</strong></p>
+                    <p>Pflanzen reagieren differenziert auf Lichtqualitäten, die Morphologie und Stoffwechselprozesse steuern. Die Anpassung des Spektrums an die jeweilige Entwicklungsphase optimiert die Pflanzenperformance.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('phasesSection')">Phase-spezifische Lichtanforderungen <span class="arrow">▼</span></label>
+                <div id="phasesSection" class="sub-section">
+                    <h3>Keimlingsphase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Wert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>PPFD</td>
+                            <td>100–200 µmol/m²/s</td>
+                            <td>Niedrige Lichtintensität schützt zarte Keimlinge vor Stress, unterstützt die erste Photosynthese und verhindert Verbrennungen.</td>
+                        </tr>
+                        <tr>
+                            <td>PPF</td>
+                            <td>50–100 µmol/s für ca. 0,5 m²</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>DPI</td>
+                            <td>5–10 mol/m²/Tag bei 16–18 Stunden Beleuchtung</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Spektrum</td>
+                            <td>Stark blau-dominant (400–500 nm)</td>
+                            <td>Fördert Zellteilung, Phototropismus und frühe Wurzelentwicklung. Vollspektrumlampen mit Schwerpunkt auf Blau sind ideal.</td>
+                        </tr>
+                        <tr>
+                            <td>Photoperiode</td>
+                            <td>16–18 Stunden Licht / 6–8 Stunden Dunkel</td>
+                            <td>-</td>
+                        </tr>
+                    </table>
+                    <p><strong>Ergänzende Details:</strong></p>
+                    <p>Keimlinge haben eine niedrige Photosynthesekapazität und sind besonders lichtempfindlich. Ein höherer Blauanteil reguliert das Hormonsystem (z. B. Auxine), fördert gesunde Stängel und verhindert Vergeilung.</p>
+                    <h3>Vegetative Phase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Wert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>PPFD</td>
+                            <td>300–600 µmol/m²/s</td>
+                            <td>Stärkt die Photosynthese für rasches Wachstum von Blattmasse und Stängeln.</td>
+                        </tr>
+                        <tr>
+                            <td>PPF</td>
+                            <td>150–300 µmol/s für ca. 0,5 m²</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>DPI</td>
+                            <td>15–25 mol/m²/Tag bei 18 Stunden Beleuchtung</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Spektrum</td>
+                            <td>Blau-dominant (400–500 nm) mit moderatem Anteil an grünem Licht</td>
+                            <td>Für bessere Tiefenpenetration im Blattdach. Vollspektrum-LEDs oder Metalldampflampen bieten ausgewogene Lichtqualitäten.</td>
+                        </tr>
+                        <tr>
+                            <td>Photoperiode</td>
+                            <td>18 Stunden Licht / 6 Stunden Dunkel</td>
+                            <td>-</td>
+                        </tr>
+                    </table>
+                    <p><strong>Ergänzende Details:</strong></p>
+                    <p>Blaues Licht unterstützt die Chlorophyllproduktion und eine kompakte, kräftige Wuchsform. Grünes Licht dringt tiefer in das Laub ein und fördert die Photosynthese in unteren Blattbereichen.</p>
+                    <h3>Blütephase</h3>
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Wert</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>PPFD</td>
+                            <td>600–1000 µmol/m²/s</td>
+                            <td>Hohe Lichtintensität maximiert die Fotosynthese, Blütenbildung und Fruchtansatz.</td>
+                        </tr>
+                        <tr>
+                            <td>PPF</td>
+                            <td>300–500 µmol/s für ca. 0,5 m²</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>DPI</td>
+                            <td>25–40 mol/m²/Tag bei 12 Stunden Beleuchtung</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Spektrum</td>
+                            <td>Rot-dominant (600–700 nm)</td>
+                            <td>Zur Aktivierung von Phytochromen, die Blütenbildungsprozesse steuern. HPS-Lampen oder LEDs mit erhöhtem Rotanteil sind empfehlenswert.</td>
+                        </tr>
+                        <tr>
+                            <td>Photoperiode</td>
+                            <td>12 Stunden Licht / 12 Stunden Dunkel</td>
+                            <td>-</td>
+                        </tr>
+                    </table>
+                    <p><strong>Ergänzende Details:</strong></p>
+                    <p>Rotes Licht regt die Synthese von Blütenhormonen an, fördert kompakte und dichte Blütenstände. Ein gewisser Blauanteil (ca. 10–20 %) bleibt wichtig für Struktur und Gesundheit.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('implementationSection')">Praktische Umsetzung und Monitoring <span class="arrow">▼</span></label>
+                <div id="implementationSection" class="sub-section">
+                    <p><strong>Lichtmessung:</strong></p>
+                    <p>Regelmäßige Messung der PPFD mit einem PAR-Meter direkt am Blattdach oder Blütendach zur genauen Steuerung. Uneinheitliche Beleuchtung vermeiden durch Reflektoren und optimale Lampenposition.</p>
+                    <p><strong>Lichtmanagement im Controller:</strong></p>
+                    <p>Programmierung der Beleuchtungsdauer (Photoperiode) und Lichtintensität angepasst an die Entwicklungsphase. Automatische Anpassung der Lampenabstände oder Dimmstufen kann helfen, Lichtstress zu vermeiden.</p>
+                    <p><strong>Temperaturmanagement:</strong></p>
+                    <p>Hohe PPFD-Werte erzeugen Wärme. Temperaturkontrolle am Blattdach verhindert Hitzestress, der Photosyntheseleistung und Wachstum beeinträchtigt.</p>
+                    <p><strong>Spektrumsteuerung:</strong></p>
+                    <p>Moderne LED-Systeme ermöglichen die Anpassung der Lichtfarben während der Phasen, um optimale Wachstumssignale zu setzen.</p>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('diagnosisSection')">Fehlerdiagnose <span class="arrow">▼</span></label>
+                <div id="diagnosisSection" class="sub-section">
+                    <h3>Typische Symptome bei Lichtproblemen</h3>
+                    <p>Probleme in der Lichtsteuerung zeigen sich oft zuerst an der Morphologie der Pflanzen, da diese auf Lichtmangel oder Überbelichtung unmittelbar reagieren. Die visuelle Beurteilung gepaart mit Messwerten (PPFD, DPI, Spektrum) ermöglicht eine schnelle Ursachenanalyse.</p>
+                    <table>
+                        <tr>
+                            <th>Symptom</th>
+                            <th>Mögliche Ursache</th>
+                            <th>Erklärung</th>
+                        </tr>
+                        <tr>
+                            <td>Vergeilung (lange, dünne Internodien)</td>
+                            <td>Zu geringe PPFD in Keimling- oder Vegetationsphase</td>
+                            <td>Die Pflanze „sucht“ nach Licht – typisch bei zu großem Lampenabstand oder zu schwacher Beleuchtung.</td>
+                        </tr>
+                        <tr>
+                            <td>Blattverbleichung (Chlorose oben)</td>
+                            <td>Zu hohe PPFD oder zu geringe Distanz in frühen Phasen</td>
+                            <td>Übermäßige Photonenbelastung führt zu Stressreaktionen, die Photosyntheseleistung sinkt.</td>
+                        </tr>
+                        <tr>
+                            <td>Lokale Verbrennungen</td>
+                            <td>Hotspots durch falsche Ausleuchtung</td>
+                            <td>Besonders bei HPS- oder LED-COB-Setups ohne Streuoptik oder Reflektor.</td>
+                        </tr>
+                        <tr>
+                            <td>Blätter kräuseln sich nach oben</td>
+                            <td>Hitzestress durch Lichtnähe oder zu hohe Umgebungstemperatur</td>
+                            <td>Licht erzeugt Wärme, die zur Austrocknung der oberen Zelllagen führt.</td>
+                        </tr>
+                        <tr>
+                            <td>Träge Blütephase, verzögerte Blütenentwicklung</td>
+                            <td>Ungeeignetes Spektrum (z. B. zu wenig Rotanteil) oder falsche Photoperiode</td>
+                            <td>Die Aktivierung der floralen Signalwege bleibt aus oder verzögert sich.</td>
+                        </tr>
+                        <tr>
+                            <td>Dünne Blütenstände, schwacher Harzbesatz</td>
+                            <td>Zu niedrige PPFD in Blüte, DPI zu gering</td>
+                            <td>Es fehlen Energie und Impulse für die Ausbildung reproduktiver Strukturen.</td>
+                        </tr>
+                        <tr>
+                            <td>Stagnation im Wachstum trotz korrekter Nährstoffversorgung</td>
+                            <td>Unterversorgung mit Lichtenergie (PPFD oder DPI zu gering)</td>
+                            <td>Photosynthese ist der limitierende Faktor, Nährstoffe können nicht effektiv umgesetzt werden.</td>
+                        </tr>
+                    </table>
+                    <h3>Fehlerbehebung</h3>
+                    <p>Eine genaue Fehlerbehebung erfordert die Kombination aus Sensorik, visueller Beobachtung und ggf. Korrekturmaßnahmen an der Hardware (Leuchten) oder Steuerung (Grow Controller). Unten sind die häufigsten Problemfelder samt Lösungsstrategien beschrieben – differenziert nach Phase und Ursache.</p>
+                    <h4>Keimlingsphase</h4>
+                    <p><strong>Problem:</strong> Keimlinge wachsen lang, instabil und knicken um.</p>
+                    <p><strong>Ursache:</strong> Zu niedrige PPFD, meist <100 µmol/m²/s.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Lampe näher an Pflanze (auf ca. 40–60 cm bei schwachen LEDs).</li>
+                        <li>Lichtquelle mit mindestens 100 µmol/m²/s wählen.</li>
+                        <li>Kontrolliere die Gleichmäßigkeit: Keimlinge im Randbereich erhalten oft zu wenig Licht.</li>
+                        <li>Optional: Reflektorfolie nutzen oder Fläche verkleinern.</li>
+                    </ul>
+                    <p><strong>Problem:</strong> Keimlinge zeigen verbräunte Spitzen.</p>
+                    <p><strong>Ursache:</strong> Zu hohe Intensität, kein Schutz der Zellwände.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Abstand vergrößern.</li>
+                        <li>Beleuchtungsdauer leicht reduzieren.</li>
+                        <li>In den ersten 3–5 Tagen ggf. nur 50 % Lichtleistung einsetzen.</li>
+                    </ul>
+                    <h4>Vegetative Phase</h4>
+                    <p><strong>Problem:</strong> Pflanze bleibt klein, wirkt gestaucht.</p>
+                    <p><strong>Ursache:</strong> Überdominantes Blau-Spektrum, Licht zu nah.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Lichtspektrum ausgleichen (mehr Grün oder etwas Rot).</li>
+                        <li>Abstand erhöhen oder dimmen.</li>
+                        <li>PPFD messen – Zielbereich: 300–600 µmol/m²/s.</li>
+                    </ul>
+                    <p><strong>Problem:</strong> Pflanze zeigt hängende Blätter trotz Wasser.</p>
+                    <p><strong>Ursache:</strong> Hitzestress durch Licht und Umgebung.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Temperatur am Blattdach messen – Ziel: 22–26 °C.</li>
+                        <li>Aktive Kühlung oder Belüftung verstärken.</li>
+                        <li>Lichtintensität drosseln oder Lampen höher hängen.</li>
+                    </ul>
+                    <h4>Blütephase</h4>
+                    <p><strong>Problem:</strong> Keine oder späte Blütenbildung trotz Umstellung auf 12/12.</p>
+                    <p><strong>Ursache:</strong> Lichtspektrum zu blau, fehlender Rotanteil.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Wechsle auf HPS oder LED mit hohem Rot- und Far-Red-Anteil.</li>
+                        <li>Sicherstellen, dass keine Lichtlecks in der Dunkelphase auftreten.</li>
+                    </ul>
+                    <p><strong>Problem:</strong> Fluffige, lockere Blüten ohne Masse.</p>
+                    <p><strong>Ursache:</strong> DPI zu niedrig (<25 mol/m²/Tag).</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Erhöhe PPFD (600–1000 µmol/m²/s Zielbereich).</li>
+                        <li>Beleuchtungsdauer fix auf 12 h halten.</li>
+                        <li>Nutze Reflektoren für gleichmäßige Lichtverteilung.</li>
+                    </ul>
+                    <p><strong>Problem:</strong> Blüten zeigen verbräunte Spitzen und Harz reduziert sich.</p>
+                    <p><strong>Ursache:</strong> Lichtstress durch zu geringe Distanz bei zu hoher Intensität.</p>
+                    <p><strong>Lösung:</strong></p>
+                    <ul>
+                        <li>Lampe höher positionieren.</li>
+                        <li>PPFD regelmäßig mit PAR-Meter prüfen.</li>
+                        <li>LED-Systeme ggf. auf 80–90 % dimmen.</li>
+                    </ul>
+                    <h4>Empfehlung für die Praxis</h4>
+                    <ul>
+                        <li>Installiere ein professionelles PAR-Meter dauerhaft im Growbereich zur Live-Messung.</li>
+                        <li>Logge PPFD und DPI-Werte automatisiert mit dem Grow Controller und optimiere diese regelmäßig.</li>
+                        <li>Nutze programmierbare LEDs mit spektraler Kanalsteuerung (Blau, Rot, Far-Red, UV), um Lichtdynamik auf die Pflanzenphase abzustimmen.</li>
+                        <li>Vermeide Lichtlecks in der Dunkelphase – bereits kleinste Mengen stören Photoperiode und Blüteauslösung.</li>
+                        <li>Berücksichtige Raumhöhe und Reflektion, um gleichmäßige Verteilung zu gewährleisten – besonders wichtig bei stark streuenden oder punktuellen Lichtquellen (z. B. LED-Chips).</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -341,6 +581,14 @@
                 }
             });
         });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        }
     </script>
 </body>
 </html>
