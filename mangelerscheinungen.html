@@ -1,0 +1,648 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Controller - Mangelerscheinungen</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #1c2526;
+            margin: 0;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #2ecc71;
+            font-size: 2.5em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .nav {
+            background-color: #2f3b3c;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        .nav li {
+            position: relative;
+        }
+        .nav a {
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            display: block;
+            transition: color 0.2s;
+        }
+        .nav a:hover {
+            color: #27ae60;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #252f30;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .dropdown-content a {
+            color: #2ecc71;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9em;
+            flex: 1 1 45%;
+            text-align: center;
+        }
+        .dropdown-content a:hover {
+            background-color: #1c2526;
+            color: #27ae60;
+        }
+        .dropdown:hover .dropdown-content,
+        .dropdown.touched .dropdown-content {
+            display: flex;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2f3b3c;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .container h2 {
+            color: #2ecc71;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .data div.section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+            background-color: #252f30;
+        }
+        .data label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        .data label span.arrow {
+            color: #2ecc71;
+            font-size: 1em;
+        }
+        .data span {
+            font-size: 1.2em;
+            color: #2ecc71;
+        }
+        .sub-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1c2526;
+            border-radius: 5px;
+        }
+        .sub-section.active {
+            display: block;
+        }
+        .nutrient-section {
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid rgba(74, 86, 87, 0.5);
+        }
+        .nutrient-section:last-child {
+            border-bottom: none;
+        }
+        .nutrient-section label {
+            font-size: 0.9em;
+            padding: 8px 0;
+        }
+        .nutrient-details {
+            display: none;
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #1c2526;
+            border: 1px solid #4a5657;
+            border-radius: 5px;
+        }
+        .nutrient-details.active {
+            display: block;
+        }
+        .nutrient-details h3 {
+            color: #2ecc71;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .nutrient-details p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+        .nutrient-details ul {
+            margin: 0 0 10px 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .nutrient-details ul li {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .nutrient-image {
+            margin: 10px 0;
+            text-align: center;
+        }
+        .nutrient-image img {
+            max-width: 100%;
+            height: auto;
+            max-height: 150px;
+            border-radius: 5px;
+            border: 1px solid #4a5657;
+        }
+        .nutrient-image p {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin: 5px 0;
+        }
+        @media (max-width: 600px) {
+            .nav ul {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 5px;
+            }
+            .nav li {
+                flex: 1;
+                text-align: center;
+            }
+            .nav a {
+                font-size: 0.9em;
+                padding: 8px 5px;
+            }
+            .dropdown-content {
+                min-width: 100%;
+                max-width: 100%;
+                left: 0;
+                transform: none;
+                padding: 5px;
+            }
+            .dropdown-content a {
+                font-size: 0.8em;
+                padding: 6px 8px;
+                flex: 1 1 48%;
+            }
+            .nutrient-section label {
+                font-size: 0.8em;
+            }
+            .nutrient-details h3 {
+                font-size: 1em;
+            }
+            .nutrient-details p,
+            .nutrient-details ul li {
+                font-size: 0.8em;
+            }
+            .nutrient-image img {
+                max-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Grow Controller</h1>
+    </div>
+    <div class="nav">
+        <ul>
+            <li><a href="index.html">Klima</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Steuerung</a>
+                <div class="dropdown-content">
+                    <a href="bewasserung.html">Bewässerung</a>
+                    <a href="licht.html">Licht</a>
+                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
+                    <a href="luftung.html">Lüftung</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Anleitungen</a>
+                <div class="dropdown-content">
+                    <a href="substrat.html">Substrat</a>
+                    <a href="wasser.html">Wasser</a>
+                    <a href="licht-anleitung.html">Licht</a>
+                    <a href="klima-anleitung.html">Klima</a>
+                    <a href="nahrstoffe.html">Nährstoffe</a>
+                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
+                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
+                    <a href="anwendung.html">Anwendung</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2>Mangelerscheinungen</h2>
+        <div class="data">
+            <div class="section">
+                <label onclick="toggleSection('macroSection')">Makronährstoffe <span class="arrow">▼</span></label>
+                <div id="macroSection" class="sub-section">
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('stickstoffDetails')">Stickstoff (N) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="stickstoffDetails"></div>
+                        <div id="stickstoffDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Stickstoff ist ein essenzieller Baustein von Chlorophyll, Aminosäuren, Proteinen und Nukleinsäuren. Er ist entscheidend für das vegetative Wachstum, die Photosynthese und die Biomasseproduktion.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Stark reduziertes Wachstum bei Konzentrationen unter 80 mg/L, wie Studien zeigen: Pflanzen mit 30 mg/L N weisen deutlich eingeschränkte Spross- und Wurzelentwicklung auf, mit typischer Interkostalchlorose an älteren Blättern und geringer Biomasse.</li>
+                                <li>Maximales Wachstum wurde bei etwa 160 mg/L N beobachtet; höhere Werte (240–320 mg/L) führten zu vermindertem Wurzelwachstum oder toxischen Effekten, wie Verfärbung (dunkelgrün), Wachstumshemmung und Wurzelstau.</li>
+                                <li>Wurzel- & Sprossbiomasse halbierten sich bei N-Defizit (~1,62 % Blatt-N statt 4,28 %).</li>
+                                <li>Der Vergleich von NO₃⁻ und NH₄⁺ zeigte, dass reiner NO₃⁻ im medizinischen Cannabis die besten Blüten- und Sekundärmetaboliten liefert. Ammonium-Anteile bis 30 % bei ~20–60 ppm NH₄⁺ waren unproblematisch. Ab 50 % NH₄⁺ (100 ppm) traten bereits toxische Symptome auf; 100 % NH₄⁺ führte zu starker Toxizität und Pflanzentod.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimalbereich: ca. 160 mg/L N (als NO₃⁻ dominiert), um ein ausgewogenes Wachstum und hohe Biomasse + Wurzeln zu gewährleisten.</li>
+                                <li>Defizit (<80 mg/L) führt zu sichtbarer Chlorose, schlechtem Wurzel-/Sprosswachstum, ~50 % Biomasseverlust.</li>
+                                <li>Überversorgung (>240 mg/L) limitiert wiederum Wurzelwachstum und kann sekundäre Stoffe reduzieren.</li>
+                                <li>Ammoniumanteile ≤30 % sind verträglich, potenziell positiv (pH-Stabilität); höhere Anteile vermeiden.</li>
+                                <li>Monitoring: Blattanalyse zur Kontrolle (Target 3,3–4,8 % N).</li>
+                                <li>Düngung: Bei Defizit N-Ergänzung, z. B. KNO₃ oder organische Quellen, dosieren, um 160 mg/L Gesamt-N zu erreichen.</li>
+                                <li>Feinjustierung je nach Sorte: Genotyp-spezifische Unterschiede (z. B. Verbrauch = 160–230 mg/L) möglich.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('phosphorDetails')">Phosphor (P) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="phosphorDetails"></div>
+                        <div id="phosphorDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Phosphor ist zentral für ATP, Nukleinsäuren, Zellteilung, Wurzel- und Blütenentwicklung. Mobil in der Pflanze, wird es von älteren Blättern abgezogen und zum Wachstum neuer Organe verlagert.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Verzögertes Wachstum, besonders bei Wurzeln und Blüten; beobachtet in mehreren NCSU-Studien mit ersten Symptomen (stalled growth) in frühen Vegetationsphasen und während der Blüte.</li>
+                                <li>Old-leaf-spotting: Dunkelgrüne → blaue/violette Färbung der älteren Blätter, später oliv-grüne, eingesunkene Flecken und nekrotische Ränder.</li>
+                                <li>Instabile Stängel und schwache Struktur, da Zellteilung und Ligninbildung eingeschränkt ist.</li>
+                                <li>Reduzierte Blütenpotenz und -dichte, einschließlich niedrigerer Harzproduktion und geringer Yields.</li>
+                                <li>Folienanalyse zeigt ~79 % reduzierten Blatt-P-Gehalt (0,09 % vs. 0,43 %), kombiniert mit deutlichen Mangelerscheinungen.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimalbereich:
+                                    <ul>
+                                        <li>Hydroponie: Studien legen nahe: 15–60 mg/L P ist ausreichend, höhere Konzentrationen steigern Ertrag kaum noch.</li>
+                                        <li>Blütephase: RCTs zeigen optimale Yields bei 40–80 mg/L, Top-Erträge mit ~59 mg/L.</li>
+                                    </ul>
+                                </li>
+                                <li>Defizit (<15 mg/L) führt zu deutlich gestörtem Wachstum, deutlichen Blattflecken/nekrosen, weniger Blütenpotenz; Verbesserung sichtbar nach 5–10 Tagen bei Korrektur.</li>
+                                <li>Überversorgung (>11 000 ppm) kann andere Mikronährstoffe verdrängen (Ca, Mg, Zn), führt zu Toxizität wie Blattverbrennungen und Platteffekte.</li>
+                                <li>pH beachten: Idealbereich: 6,2–6,8 (Soil), 5,5–6,2 (Hydro).</li>
+                                <li>Temperatur: Unter 15 °C nimmt P schlechter auf, Frühjahre/kalte Wurzeln vermeiden.</li>
+                                <li>Empfehlung:
+                                    <ul>
+                                        <li>Vegetative Phase: 15–30 mg/L P.</li>
+                                        <li>Blüte: auf ~40–60 mg/L erhöhen (max. 80 mg/L).</li>
+                                        <li>Bei Defizit sofort P-Zufuhr (z. B. MKP oder organisch) + pH-Korrektur.</li>
+                                        <li>Überschuss vermeiden, um Mikronährstoff-Mobilität nicht zu blockieren.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('kaliumDetails')">Kalium (K) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="kaliumDetails"></div>
+                        <div id="kaliumDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Kalium ist ein essentieller Makronährstoff, der nicht in Zellstrukturen eingebaut, sondern in freier Form in den Zellen wirkt. Es reguliert den osmotischen Druck, kontrolliert die Stomataöffnung, aktiviert über 60 Enzyme und spielt eine zentrale Rolle im Wassertransport, in der Photosyntheseeffizienz und bei der Stabilisierung von Zellmembranen.</p>
+                            <p>In der Cannabis-Pflanze beeinflusst Kalium besonders:</p>
+                            <ul>
+                                <li>Die Wasseraufnahme durch die Wurzeln</li>
+                                <li>Die Transpiration und Nährstoffverlagerung</li>
+                                <li>Die Blütenbildung (insbesondere Harzproduktion)</li>
+                                <li>Die Krankheitsresistenz gegenüber Pathogenen und Umweltstress</li>
+                            </ul>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Erste Symptome treten meist an den älteren Blättern auf (K ist mobil).</li>
+                                <li>Typisch sind gelbliche bis bräunliche Verfärbungen an den Blatträndern (Randchlorose → Randnekrose), die sich später nach innen ausweiten.</li>
+                                <li>Die Blattadern bleiben oft zunächst grün, später tritt ein verbranntes, vertrocknetes Erscheinungsbild auf.</li>
+                                <li>Blattspitzen kräuseln sich nach oben, oft in Verbindung mit vertrockneten Spitzen.</li>
+                                <li>Die Pflanzen zeigen verzögertes Streckenwachstum, schwache Internodien und eine verringerte Harzbildung.</li>
+                                <li>In der Blüte kann Kalium-Mangel zu lockeren, weniger dichten Buds, reduzierter Cannabinoid-Konzentration und insgesamt verminderter Blütenmasse führen.</li>
+                                <li>Ein schwerer K-Mangel beeinträchtigt zudem die Natrium-Kalium-Ionenbalance in den Zellen und reduziert die Stresstoleranz gegenüber Hitze oder Trockenheit.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimale Konzentration im Wurzelbereich liegt (je nach Phase) bei etwa 150–250 mg/L K.</li>
+                                <li>In der vegetativen Phase genügt meist der untere Bereich (~150 mg/L), in der Blüte sollte Kalium erhöht werden (~200–250 mg/L), um Harzproduktion, Zellfestigkeit und Wasserkontrolle zu optimieren.</li>
+                                <li>Kalium-Überschuss ist selten direkt toxisch, kann aber Magnesium- oder Calcium-Aufnahme blockieren (ionische Konkurrenz).</li>
+                                <li>Bei Mangel: Sofortige Gabe eines kaliumreichen Düngers (z. B. Kaliumsulfat), ideal in Kombination mit pH-Korrektur (optimal: 6,0–6,5 in Erde).</li>
+                                <li>Regelmäßige Blattdiagnostik hilft, frühe Mangelsymptome zu erkennen, bevor irreversible Nekrosen auftreten.</li>
+                                <li>Wichtig: Kalium beeinflusst stark die Verteilung anderer Nährstoffe → immer in Zusammenhang mit Mg, Ca und Na betrachten.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('calciumDetails')">Calcium (Ca) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="calciumDetails"></div>
+                        <div id="calciumDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Calcium ist ein struktureller Nährstoff, der in der Zellwand (Pektinschicht) und Zellmembran für Stabilität, Festigkeit und Signalübertragung sorgt. Es ist für die Zellteilung, Wurzelspitzenbildung, Membranintegrität und die Abwehrreaktionen (z. B. gegen Pilzbefall) essenziell.</p>
+                            <p>Anders als viele Nährstoffe ist Calcium nicht mobil in der Pflanze – es kann also nicht von älteren zu neuen Pflanzenteilen transportiert werden. Deshalb müssen neue Zellverbände konstant versorgt werden, insbesondere schnell wachsende Gewebe (Triebspitzen, junge Blätter, Blüten).</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Erste Anzeichen zeigen sich an den neuen Blättern:
+                                    <ul>
+                                        <li>Sie erscheinen verkrümmt, verformt, oft mit durchsichtigen oder glasigen Blattpartien.</li>
+                                        <li>Später entstehen nekrotische Flecken entlang der Blattadern oder an den Rändern.</li>
+                                    </ul>
+                                </li>
+                                <li>Die Wurzelentwicklung wird gehemmt: Es entstehen dicke, kurz gestauchte Wurzeln, oft mit verringerter Haarwurzelbildung.</li>
+                                <li>Triebspitzen können absterben oder verkrüppeln, was besonders in der Blüte zu massiven Ertragsverlusten führt.</li>
+                                <li>In der Blütephase kann ein Ca-Mangel auch zu verformten oder offenen Blütenkelchen führen, was Schimmelbefall begünstigt.</li>
+                                <li>Calcium ist zudem maßgeblich an der Nährstoffaufnahmekontrolle beteiligt: Mangelhafte Ca-Versorgung kann die pH-Stabilität der Rhizosphäre und die Kationenaufnahme (z. B. K, Mg) beeinträchtigen.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Calcium ist für junge Pflanzenteile unverzichtbar, kann aber nicht in der Pflanze umverteilt werden → gleichmäßige Versorgung über das Gießwasser ist zwingend erforderlich.</li>
+                                <li>Ideale Konzentrationen liegen zwischen 100–150 mg/L Ca, je nach Medium und Zusatzstoff (z. B. bei Coco oft höherer Bedarf wegen Cationentausch).</li>
+                                <li>In Hydro- oder sehr weichem Wasser: Calcium sollte über Ca(NO₃)₂ oder CalMag-Produkte zugeführt werden.</li>
+                                <li>pH-Bereich für optimale Aufnahme: 6,2–6,8 (Erde), 5,8–6,2 (Hydro).</li>
+                                <li>Calcium-Mangel kommt oft kombiniert mit Magnesium-Mangel vor – Ursache ist meist weiches Wasser oder Umkehrosmosewasser ohne Remineralisierung.</li>
+                                <li>Prophylaktisch: Regelmäßige CalMag-Zufuhr bei Verwendung von Osmosewasser oder Kokossubstraten.</li>
+                                <li>Bei akutem Mangel: Einsatz von Calciumnitrat oder calciumhaltigen Blattdüngern kann Symptome eindämmen.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('magnesiumDetails')">Magnesium (Mg) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="magnesiumDetails"></div>
+                        <div id="magnesiumDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Magnesium ist das zentralste Element im Chlorophyll-Molekül – ohne Mg findet keine Photosynthese statt. Darüber hinaus ist es als Kofaktor für über 300 Enzyme beteiligt, unter anderem bei der Zuckerbildung, Proteinbiosynthese, Energieübertragung (ATP) und im Stoffwechsel von Phosphatverbindungen.</p>
+                            <p>Magnesium ist ein mobiler Nährstoff, das heißt: Bei Mangel wird es von älteren Blättern abgezogen, um jüngere zu versorgen.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Erstes Symptom: Interkostale Chlorose an den älteren, unteren Blättern → die Bereiche zwischen den Blattadern vergilben, während die Adern selbst grün bleiben.</li>
+                                <li>Später entstehen rostfarbene oder braune Punkte, die sich zu nekrotischen Flecken verbinden.</li>
+                                <li>Blätter können sich nach oben einrollen, trocken wirken oder vorzeitig abfallen.</li>
+                                <li>Mangelhafte Mg-Versorgung reduziert die Effizienz der Photosynthese drastisch, was zu verlangsamtem Wachstum, verminderter Blütenausbildung und geringerem Harzgehalt führt.</li>
+                                <li>Oft treten Mg-Mängel bei hoher Kalium- oder Calciumversorgung auf – durch ionische Antagonismen wird Magnesium aus dem Wurzelsystem verdrängt.</li>
+                                <li>Besonders Coco, Hydroponik und Osmosewasser zeigen schnell Mg-Mangel, wenn kein Mg zugesetzt wird.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Optimalbereich im Nährwasser: etwa 50–75 mg/L Mg (je nach Anbausystem).</li>
+                                <li>Bei weichem Wasser oder Osmose: Unbedingt Magnesium ergänzen – entweder separat (Magnesiumsulfat = Bittersalz) oder über CalMag-Produkte.</li>
+                                <li>pH-Wert ist entscheidend für Aufnahme:
+                                    <ul>
+                                        <li>Erde: 6,2–6,8</li>
+                                        <li>Hydro: 5,8–6,2</li>
+                                        <li>Unter pH 5,5 wird Mg kaum aufgenommen.</li>
+                                    </ul>
+                                </li>
+                                <li>Konkurrenz mit K und Ca vermeiden: Bei hohem K- oder Ca-Wert (z. B. in harten Leitungswasser oder Blütedünger) kann Magnesium blockiert werden → hier sollte Mg bewusst nachgeführt werden.</li>
+                                <li>Symptombehandlung: Bittersalz (MgSO₄) 0,5–1 g/l als Blatt- oder Bodendüngung über mehrere Tage; zusätzlich pH und EC prüfen.</li>
+                                <li>Blattdiagnose ist bei Mg-Mangel besonders hilfreich, da Symptome sehr früh sichtbar werden.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('schwefelDetails')">Schwefel (S) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="schwefelDetails"></div>
+                        <div id="schwefelDetails" class="nutrient-details">
+                            <h3>🧬 Funktion in der Pflanze</h3>
+                            <p>Schwefel ist ein essentieller Bestandteil von Aminosäuren wie Cystein und Methionin sowie von Enzymen, Coenzymen und Vitaminen (z. B. Biotin, Thiamin). Es ist notwendig für die Chloroplastenbildung, den Energiestoffwechsel und die Biosynthese sekundärer Pflanzenstoffe wie Terpene, Glucosinolate und Flavonoide.</p>
+                            <p>Im Gegensatz zu Stickstoff ist Schwefel in der Pflanze weniger mobil – bei Mangel kann er nicht effektiv von älteren zu jüngeren Blättern transportiert werden.</p>
+                            <h3>🔬 Mangelerscheinungen & Wirkungen</h3>
+                            <ul>
+                                <li>Chlorose der jungen, oberen Blätter: blassgelb bis fast weißlich, aber mit grünen Adern (ähnlich Eisenmangel).</li>
+                                <li>Das Gesamtbild wirkt wie ein „umgekehrter Stickstoffmangel“ – N-Mangel beginnt unten, S-Mangel oben.</li>
+                                <li>Mit fortschreitendem Mangel werden die jungen Blätter klein, dünn und deformiert.</li>
+                                <li>Internodien werden kürzer, das Pflanzenwachstum verlangsamt sich spürbar.</li>
+                                <li>Die Pflanze kann insgesamt klein und schwächlich erscheinen.</li>
+                                <li>In der Blütephase führt Schwefelmangel zu schwacher Harzproduktion, geringerem Aroma und Blütendichte.</li>
+                                <li>Schwefel ist auch an der Stomataregulation beteiligt – Mangel beeinträchtigt die Gasaufnahme und reduziert die Photosyntheseeffizienz.</li>
+                                <li>Besonders in organischen Substraten oder bei stark filtriertem Wasser (z. B. Umkehrosmose) kann Schwefel fehlen, da viele Dünger nur geringe Mengen enthalten.</li>
+                            </ul>
+                            <h3>📊 Zusammenfassung & Empfehlung</h3>
+                            <ul>
+                                <li>Schwefelbedarf liegt typischerweise bei 40–80 mg/L S, was in vielen Standarddüngern nicht vollständig abgedeckt ist.</li>
+                                <li>Häufige Quelle: Magnesiumsulfat (MgSO₄) → deckt Mg und S gleichzeitig ab.</li>
+                                <li>Bei reiner Hydroponik oder Osmosebetrieb ist eine gezielte Schwefelergänzung empfehlenswert – z. B. über Bittersalz, Kaliumsulfat oder Ammoniumsulfat (je nach Bedarf).</li>
+                                <li>pH-Bereich für Schwefelaufnahme:
+                                    <ul>
+                                        <li>Erde: 6,0–7,0</li>
+                                        <li>Hydro: 5,5–6,5</li>
+                                    </ul>
+                                </li>
+                                <li>Überschüsse sind selten problematisch, können aber bei extrem hohen Konzentrationen zu sekundären Effekten führen (Verdrängung von Molybdän oder Anhebung des ECs).</li>
+                                <li>Bei Schwefelmangel: Blass-gelbe neue Blätter mit schlechtem Wachstum → S-Dünger oder Bittersalz verwenden.</li>
+                                <li>Kombimangel mit Eisen möglich, da beide bei hoher pH-Fehlstellung gleichzeitig blockiert werden können – pH-Kontrolle ist hier besonders wichtig.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <label onclick="toggleSection('microSection')">Mikronährstoffe <span class="arrow">▼</span></label>
+                <div id="microSection" class="sub-section">
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('eisenDetails')">Eisen (Fe) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="eisenDetails"></div>
+                        <div id="eisenDetails" class="nutrient-details">
+                            <p>Details zu Eisen (Fe) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('zinkDetails')">Zink (Zn) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="zinkDetails"></div>
+                        <div id="zinkDetails" class="nutrient-details">
+                            <p>Details zu Zink (Zn) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('manganDetails')">Mangan (Mn) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="manganDetails"></div>
+                        <div id="manganDetails" class="nutrient-details">
+                            <p>Details zu Mangan (Mn) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('kupferDetails')">Kupfer (Cu) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="kupferDetails"></div>
+                        <div id="kupferDetails" class="nutrient-details">
+                            <p>Details zu Kupfer (Cu) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('borDetails')">Bor (B) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="borDetails"></div>
+                        <div id="borDetails" class="nutrient-details">
+                            <p>Details zu Bor (B) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('molybdaenDetails')">Molybdän (Mo) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="molybdaenDetails"></div>
+                        <div id="molybdaenDetails" class="nutrient-details">
+                            <p>Details zu Molybdän (Mo) folgen hier...</p>
+                        </div>
+                    </div>
+                    <div class="nutrient-section">
+                        <label onclick="toggleSection('chlorDetails')">Chlor (Cl) (selten kritisch) <span class="arrow">▼</span></label>
+                        <div class="nutrient-image" data-nutrient-id="chlorDetails"></div>
+                        <div id="chlorDetails" class="nutrient-details">
+                            <p>Details zu Chlor (Cl) folgen hier...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Centralized image mapping for nutrients
+        const nutrientImages = {
+            'stickstoffDetails': 'stickstoff.png',
+            'phosphorDetails': 'phosphor.png',
+            'kaliumDetails': 'kalium.png',
+            'calciumDetails': 'calcium.png',
+            'magnesiumDetails': 'magnesium.png',
+            'schwefelDetails': 'schwefel.png',
+            'eisenDetails': 'eisen.png',
+            'zinkDetails': 'zink.png',
+            'manganDetails': 'mangan.png',
+            'kupferDetails': 'kupfer.png',
+            'borDetails': 'bor.png',
+            'molybdaenDetails': 'molybdaen.png',
+            'chlorDetails': 'chlor.png'
+        };
+
+        // Toggle dropdown on touch or click for mobile devices
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const dropbtn = dropdown.querySelector('.dropbtn');
+            dropbtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isTouched = dropdown.classList.contains('touched');
+                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
+                if (!isTouched) {
+                    dropdown.classList.add('touched');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('touched');
+                }
+            });
+        });
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const label = section.parentElement.querySelector('label');
+            section.classList.toggle('active');
+            const arrow = label.querySelector('.arrow');
+            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+
+            // Handle image loading for main sections (macroSection, microSection)
+            if (sectionId === 'macroSection' || sectionId === 'microSection') {
+                const nutrientSections = section.querySelectorAll('.nutrient-section');
+                nutrientSections.forEach(nutrientSection => {
+                    const imageContainer = nutrientSection.querySelector('.nutrient-image');
+                    const nutrientId = imageContainer.getAttribute('data-nutrient-id');
+                    const nutrientName = nutrientSection.querySelector('label').textContent.split(' ')[0];
+                    if (section.classList.contains('active')) {
+                        const imageFile = nutrientImages[nutrientId];
+                        if (imageFile) {
+                            imageContainer.innerHTML = `<img src="${imageFile}" alt="${nutrientName} Mangelerscheinung" onerror="this.parentElement.innerHTML='<p>Bild für ${nutrientName} nicht verfügbar</p>'">`;
+                        } else {
+                            imageContainer.innerHTML = `<p>Bild für ${nutrientName} nicht verfügbar</p>`;
+                        }
+                    } else {
+                        imageContainer.innerHTML = ''; // Clear image when closing
+                    }
+                });
+            }
+
+            // Close other nutrient details in the same category
+            const siblingSections = section.parentElement.parentElement.querySelectorAll('.nutrient-section .nutrient-details');
+            siblingSections.forEach(sibling => {
+                if (sibling.id !== sectionId && sibling.classList.contains('active')) {
+                    sibling.classList.remove('active');
+                    const siblingLabel = sibling.parentElement.querySelector('label');
+                    const siblingArrow = siblingLabel.querySelector('.arrow');
+                    siblingArrow.textContent = '▼';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
