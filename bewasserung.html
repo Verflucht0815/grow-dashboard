@@ -119,10 +119,6 @@
             color: #e0e0e0;
             cursor: pointer;
         }
-        .data label span.arrow {
-            color: #2ecc71;
-            font-size: 1em;
-        }
         .data span {
             font-size: 1.2em;
             color: #2ecc71;
@@ -133,29 +129,8 @@
         .data .values div {
             margin-bottom: 10px;
         }
-        .sub-section {
-            display: none;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #1c2526;
-            border-radius: 5px;
-        }
-        .sub-section.active {
-            display: block;
-        }
         .input-container {
             margin-top: 10px;
-        }
-        .input-container input[type="number"],
-        .input-container input[type="time"] {
-            background-color: #1c2526;
-            color: #e0e0e0;
-            border: 1px solid #4a5657;
-            padding: 5px;
-            border-radius: 5px;
-            font-size: 1em;
-            width: 100%;
-            max-width: 150px;
         }
         .input-container button {
             background-color: #2ecc71;
@@ -166,32 +141,25 @@
             font-size: 1em;
             cursor: pointer;
             margin-top: 10px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
         .input-container button:hover {
             background-color: #27ae60;
         }
-        .progress-bar {
-            width: 100%;
-            background-color: #4a5657;
-            border: 1px solid #000000;
-            border-radius: 5px;
-            height: 20px;
-            margin-top: 10px;
-            overflow: hidden;
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
         }
-        .progress-fill {
-            height: 100%;
-            background-color: #3498db;
-            width: 65%;
-            transition: width 0.5s ease-in-out;
+        .indicator.on {
+            background-color: #2ecc71;
         }
-        .values strong {
-            color: #e0e0e0;
-            font-weight: bold;
-        }
-        .summary-values span {
-            display: block;
-            margin-bottom: 5px;
+        .indicator.off {
+            background-color: #e74c3c;
         }
         @media (max-width: 600px) {
             .nav ul {
@@ -220,7 +188,6 @@
                 padding: 6px 8px;
                 flex: 1 1 48%;
             }
-            .input-container input,
             .input-container button {
                 max-width: 120px;
             }
@@ -262,73 +229,31 @@
         <h2>Bewässerung</h2>
         <div class="data">
             <div class="section">
-                <label>Feuchtigkeit</label>
+                <label>Pumpensteuerung</label>
                 <div class="values">
-                    <div><span>65 %</span></div>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
+                    <div class="input-container">
+                        <button onclick="togglePump()" id="pumpButton">Pumpe <span class="indicator off"></span></button>
                     </div>
                 </div>
             </div>
             <div class="section">
-                <label onclick="toggleSection('timesSection')">Zeiten / Mengen <span class="arrow">▼</span></label>
-                <div class="values summary-values">
-                    <div id="nextSummary">
-                        <span id="nextTimeSummary">Nächste: 20:00 Uhr</span>
-                        <span id="startTimeSummary" style="display: none;">Startzeit: --:--</span>
-                        <span id="flowAmountSummary" style="display: none;">Flussmenge: -- L</span>
-                    </div>
-                </div>
-                <div id="timesSection" class="sub-section">
-                    <div class="values">
-                        <div><strong>Letzte Bewässerung</strong></div>
-                        <div><span>Letzte: 08:00 Uhr</span></div>
-                        <div><span>Letzte Flussdauer: -- min</span></div>
-                        <div><span>Letzte Menge: -- L</span></div>
-                    </div>
-                    <div class="values">
-                        <div><strong>Nächste Bewässerung</strong></div>
-                        <div><span id="nextTime">Nächste: 20:00 Uhr</span></div>
-                        <div id="nextDuration" style="display: none;">
-                            <span id="nextDurationValue">Nächste Flussdauer: -- min</span>
-                        </div>
-                        <div id="nextAmount" style="display: none;">
-                            <span id="nextAmountValue">Nächste Menge: -- L</span>
-                        </div>
-                        <div id="nextRequiredTime" style="display: none;">
-                            <span id="nextRequiredTimeValue">Benötigte Zeit: -- min</span>
-                        </div>
-                    </div>
-                    <div><span>Menge gesamt: -- L</span></div>
-                </div>
-            </div>
-            <div class="section">
-                <label onclick="toggleSection('timerSection')">Timer für nächste Bewässerung <span class="arrow">▼</span></label>
+                <label>Pumpenlaufzeit</label>
                 <div class="values">
-                    <div><span id="timerSummary">Zeitraum: --:-- bis --:--</span></div>
-                </div>
-                <div id="timerSection" class="sub-section">
-                    <div class="values">
-                        <div><span id="timerDisplay">Zeitraum: --:-- bis --:--</span></div>
-                    </div>
-                    <div class="input-container">
-                        <label>Flussmenge und Startzeit</label>
-                        <div><label>Flussmenge (L): <input type="number" min="0" step="0.1" id="flowAmount"></label></div>
-                        <div><label>Startzeit: <input type="time" id="flowStartTime"></label></div>
-                        <button onclick="setFlow()">Flussmenge setzen</button>
-                    </div>
-                    <div class="input-container">
-                        <label>Zeitraum</label>
-                        <div><label>Von: <input type="time" id="startTime"></label></div>
-                        <div><label>Bis: <input type="time" id="endTime"></label></div>
-                        <button onclick="setTimer()">Zeitraum setzen</button>
-                    </div>
-                    <div><span id="flowRate">Resultierende Flussmenge: -- L</span></div>
+                    <div><span id="pumpDuration">Laufzeit: -- min -- s</span></div>
+                    <div><span id="pumpAmount">Geförderte Menge: -- L</span></div>
                 </div>
             </div>
         </div>
     </div>
     <script>
+        // ThingSpeak configuration
+        const CHANNEL_ID = '2999714';
+        const READ_API_KEY = '95YOHGB903ET32DX';
+        const WRITE_API_KEY = 'OZ1QPHK0W2IRD8WA';
+        const BASE_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}`;
+        let pumpState = false; // Default: aus
+        let pumpStartTime = 0; // Startzeit der Pumpe (Unix-Timestamp)
+
         // Toggle dropdown on touch or click for mobile devices
         document.querySelectorAll('.dropdown').forEach(dropdown => {
             const dropbtn = dropdown.querySelector('.dropbtn');
@@ -347,91 +272,82 @@
             });
         });
 
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            const label = section.parentElement.querySelector('label');
-            section.classList.toggle('active');
-            const arrow = label.querySelector('.arrow');
-            arrow.textContent = section.classList.contains('active') ? '▲' : '▼';
+        async function togglePump() {
+            pumpState = !pumpState;
+            const button = document.getElementById('pumpButton');
+            const indicator = button.querySelector('.indicator');
+            indicator.classList.toggle('on', pumpState);
+            indicator.classList.toggle('off', !pumpState);
+            button.textContent = `Pumpe ${pumpState ? 'Aus' : 'Ein'} `;
+            button.appendChild(indicator);
+
+            // Send to ThingSpeak
+            const url = `https://api.thingspeak.com/update?api_key=${WRITE_API_KEY}&field3=${pumpState ? 1 : 0}`;
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                if (result !== 0) {
+                    console.log('Pumpenstatus gesendet!');
+                    if (pumpState) {
+                        pumpStartTime = Math.floor(Date.now() / 1000); // Startzeit speichern
+                    }
+                } else {
+                    console.error('Fehler beim Senden des Pumpenstatus');
+                }
+            } catch (error) {
+                console.error('Fehler beim Senden an ThingSpeak:', error);
+            }
         }
 
-        function setFlow() {
-            const flowAmount = parseFloat(document.getElementById('flowAmount').value) || 0;
-            const flowStartTime = document.getElementById('flowStartTime').value;
-            const [flowStartHour, flowStartMinute] = flowStartTime ? flowStartTime.split(':').map(Number) : [0, 0];
+        async function fetchPumpData() {
+            try {
+                const response = await fetch(`${BASE_URL}&results=10`);
+                const data = await response.json();
+                const feeds = data.feeds;
 
-            // Format time as HH:MM
-            const formatTime = (hour, minute) => {
-                return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            };
+                // Find latest pump state
+                let latestState = 0;
+                let latestStateTime = 0;
+                for (const feed of feeds) {
+                    if (feed.field3 && parseInt(feed.field3) !== 0) {
+                        latestState = parseInt(feed.field3);
+                        latestStateTime = new Date(feed.created_at).getTime() / 1000;
+                        break;
+                    }
+                }
 
-            // Calculate required time (100 L/h)
-            const requiredTime = flowAmount > 0 ? (flowAmount / 100 * 60).toFixed(2) : 0;
-            const flowRateText = flowAmount.toFixed(2);
+                // Update button and indicator
+                pumpState = latestState === 1;
+                const button = document.getElementById('pumpButton');
+                const indicator = button.querySelector('.indicator');
+                indicator.classList.toggle('on', pumpState);
+                indicator.classList.toggle('off', !pumpState);
+                button.textContent = `Pumpe ${pumpState ? 'Aus' : 'Ein'} `;
+                button.appendChild(indicator);
 
-            // Update display
-            document.getElementById('flowRate').textContent = `Resultierende Flussmenge: ${flowRateText} L`;
-            if (flowStartTime) {
-                document.getElementById('nextTime').textContent = `Nächste: ${formatTime(flowStartHour, flowStartMinute)}`;
-                document.getElementById('nextTimeSummary').textContent = `Nächste: ${formatTime(flowStartHour, flowStartMinute)}`;
-                document.getElementById('startTimeSummary').textContent = `Startzeit: ${formatTime(flowStartHour, flowStartMinute)}`;
-                document.getElementById('startTimeSummary').style.display = 'block';
+                // Calculate pump duration and amount
+                if (pumpState) {
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    const durationSeconds = currentTime - latestStateTime;
+                    const durationMinutes = Math.floor(durationSeconds / 60);
+                    const durationSecondsRemainder = durationSeconds % 60;
+                    const amountLiters = (durationSeconds / 3600 * 100).toFixed(2); // 100 L/h
+                    document.getElementById('pumpDuration').textContent = `Laufzeit: ${durationMinutes} min ${durationSecondsRemainder} s`;
+                    document.getElementById('pumpAmount').textContent = `Geförderte Menge: ${amountLiters} L`;
+                } else {
+                    document.getElementById('pumpDuration').textContent = 'Laufzeit: 0 min 0 s';
+                    document.getElementById('pumpAmount').textContent = 'Geförderte Menge: 0 L';
+                }
+            } catch (error) {
+                console.error('Error fetching ThingSpeak data:', error);
+                document.getElementById('pumpDuration').textContent = 'Laufzeit: -- min -- s';
+                document.getElementById('pumpAmount').textContent = 'Geförderte Menge: -- L';
             }
-            document.getElementById('flowAmountSummary').textContent = `Flussmenge: ${flowRateText} L`;
-            document.getElementById('flowAmountSummary').style.display = flowAmount > 0 ? 'block' : 'none';
-            document.getElementById('nextAmountValue').textContent = `Nächste Menge: ${flowRateText} L`;
-            document.getElementById('nextRequiredTimeValue').textContent = `Benötigte Zeit: ${requiredTime} min`;
-            document.getElementById('nextAmount').style.display = 'block';
-            document.getElementById('nextRequiredTime').style.display = 'block';
         }
 
-        function setTimer() {
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const flowAmount = parseFloat(document.getElementById('flowAmount').value) || 0;
-            const [startHour, startMinute] = startTime ? startTime.split(':').map(Number) : [0, 0];
-            const [endHour, endMinute] = endTime ? endTime.split(':').map(Number) : [0, 0];
-
-            // Format time as HH:MM
-            const formatTime = (hour, minute) => {
-                return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            };
-
-            // Calculate duration in hours
-            const startDateTime = new Date(2025, 0, 1, startHour, startMinute);
-            const endDateTime = new Date(2025, 0, 1, endHour, endMinute);
-            let durationHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-            
-            // Handle case where end time is before start time (next day)
-            if (durationHours < 0) {
-                durationHours += 24;
-            }
-
-            // Use provided flow amount or calculate based on duration (100 L/h)
-            const flowRate = flowAmount > 0 ? flowAmount : durationHours * 100;
-            const flowRateText = flowRate.toFixed(2);
-            const durationMinutes = (durationHours * 60).toFixed(2);
-            const requiredTime = flowAmount > 0 ? (flowAmount / 100 * 60).toFixed(2) : durationMinutes;
-
-            // Update display
-            if (startTime && endTime) {
-                document.getElementById('timerDisplay').textContent = `Zeitraum: ${formatTime(startHour, startMinute)} bis ${formatTime(endHour, endMinute)}`;
-                document.getElementById('timerSummary').textContent = `Zeitraum: ${formatTime(startHour, startMinute)} bis ${formatTime(endHour, endMinute)}`;
-            }
-            document.getElementById('flowRate').textContent = `Resultierende Flussmenge: ${flowRateText} L`;
-            if (startTime) {
-                document.getElementById('nextTime').textContent = `Nächste: ${formatTime(startHour, startMinute)}`;
-                document.getElementById('nextTimeSummary').textContent = `Nächste: ${formatTime(startHour, startMinute)}`;
-            }
-            document.getElementById('flowAmountSummary').textContent = `Flussmenge: ${flowRateText} L`;
-            document.getElementById('flowAmountSummary').style.display = flowRate > 0 ? 'block' : 'none';
-            document.getElementById('nextDurationValue').textContent = `Nächste Flussdauer: ${durationMinutes} min`;
-            document.getElementById('nextAmountValue').textContent = `Nächste Menge: ${flowRateText} L`;
-            document.getElementById('nextRequiredTimeValue').textContent = `Benötigte Zeit: ${requiredTime} min`;
-            document.getElementById('nextDuration').style.display = 'block';
-            document.getElementById('nextAmount').style.display = 'block';
-            document.getElementById('nextRequiredTime').style.display = 'block';
-        }
+        // Initial data load
+        fetchPumpData();
+        setInterval(fetchPumpData, 15000); // Update every 15 seconds
     </script>
 </body>
 </html>
