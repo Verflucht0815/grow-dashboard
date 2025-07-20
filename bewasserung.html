@@ -1,353 +1,101 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grow Controller - Bewässerung</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #1c2526;
-            margin: 0;
-            padding: 20px;
-            color: #e0e0e0;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            color: #2ecc71;
-            font-size: 2.5em;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .nav {
-            background-color: #2f3b3c;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-        }
-        .nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: nowrap;
-            gap: 10px;
-        }
-        .nav li {
-            position: relative;
-        }
-        .nav a {
-            color: #2ecc71;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 10px 15px;
-            display: block;
-            transition: color 0.2s;
-        }
-        .nav a:hover {
-            color: #27ae60;
-        }
-        .dropdown {
-            position: relative;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #252f30;
-            border-radius: 5px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 1;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            min-width: 300px;
-            max-width: 400px;
-        }
-        .dropdown-content a {
-            color: #2ecc71;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-            font-size: 0.9em;
-            flex: 1 1 45%;
-            text-align: center;
-        }
-        .dropdown-content a:hover {
-            background-color: #1c2526;
-            color: #27ae60;
-        }
-        .dropdown:hover .dropdown-content,
-        .dropdown.touched .dropdown-content {
-            display: flex;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #2f3b3c;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        .container h2 {
-            color: #2ecc71;
-            border-bottom: 2px solid #2ecc71;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .data div.section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #4a5657;
-            border-radius: 5px;
-            background-color: #252f30;
-        }
-        .data label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #e0e0e0;
-            cursor: pointer;
-        }
-        .data span {
-            font-size: 1.2em;
-            color: #2ecc71;
-        }
-        .data .values {
-            margin-top: 10px;
-        }
-        .data .values div {
-            margin-bottom: 10px;
-        }
-        .input-container {
-            margin-top: 10px;
-        }
-        .input-container button {
-            background-color: #2ecc71;
-            color: #1c2526;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 10px;
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .input-container button:hover {
-            background-color: #27ae60;
-        }
-        .indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .indicator.on {
-            background-color: #2ecc71;
-        }
-        .indicator.off {
-            background-color: #e74c3c;
-        }
-        @media (max-width: 600px) {
-            .nav ul {
-                display: flex;
-                justify-content: space-between;
-                flex-wrap: nowrap;
-                gap: 5px;
-            }
-            .nav li {
-                flex: 1;
-                text-align: center;
-            }
-            .nav a {
-                font-size: 0.9em;
-                padding: 8px 5px;
-            }
-            .dropdown-content {
-                min-width: 100%;
-                max-width: 100%;
-                left: 0;
-                transform: none;
-                padding: 5px;
-            }
-            .dropdown-content a {
-                font-size: 0.8em;
-                padding: 6px 8px;
-                flex: 1 1 48%;
-            }
-            .input-container button {
-                max-width: 120px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bewässerungssteuerung</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="header">
-        <h1>Grow Controller</h1>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">Bewässerungssteuerung</h1>
+    
+    <!-- Indikator für Pumpenstatus -->
+    <div id="pumpStatus" class="flex items-center justify-center mb-4">
+      <div id="statusIndicator" class="w-8 h-8 rounded-full bg-red-500"></div>
+      <span id="statusText" class="ml-2 text-lg font-semibold">Pumpe AUS</span>
     </div>
-    <div class="nav">
-        <ul>
-            <li><a href="index.html">Klima</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Steuerung</a>
-                <div class="dropdown-content">
-                    <a href="bewasserung.html">Bewässerung</a>
-                    <a href="licht.html">Licht</a>
-                    <a href="luftbefeuchter.html">Luftbefeuchter</a>
-                    <a href="luftung.html">Lüftung</a>
-                </div>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Anleitungen</a>
-                <div class="dropdown-content">
-                    <a href="substrat.html">Substrat</a>
-                    <a href="wasser.html">Wasser</a>
-                    <a href="licht-anleitung.html">Licht</a>
-                    <a href="klima-anleitung.html">Klima</a>
-                    <a href="nahrstoffe.html">Nährstoffe</a>
-                    <a href="mangelerscheinungen.html">Mangelerscheinungen</a>
-                    <a href="schadlinge-nutzlinge.html">Schädlinge/Nützlinge</a>
-                    <a href="anwendung.html">Anwendung</a>
-                </div>
-            </li>
-        </ul>
+    
+    <!-- Temperatur und Luftfeuchtigkeit -->
+    <div class="mb-4">
+      <p><strong>Temperatur:</strong> <span id="temperature">-- °C</span></p>
+      <p><strong>Luftfeuchtigkeit:</strong> <span id="humidity">-- %</span></p>
+      <p><strong>Pumpenlaufzeit:</strong> <span id="pumpRuntime">-- Minuten</span></p>
+      <p><strong>Gesamtwassermenge:</strong> <span id="waterAmount">-- Liter</span></p>
     </div>
-    <div class="container">
-        <h2>Bewässerung</h2>
-        <div class="data">
-            <div class="section">
-                <label>Pumpensteuerung</label>
-                <div class="values">
-                    <div class="input-container">
-                        <button onclick="togglePump()" id="pumpButton">Pumpe <span class="indicator off"></span></button>
-                    </div>
-                </div>
-            </div>
-            <div class="section">
-                <label>Pumpenlaufzeit</label>
-                <div class="values">
-                    <div><span id="pumpDuration">Laufzeit: -- min -- s</span></div>
-                    <div><span id="pumpAmount">Geförderte Menge: -- L</span></div>
-                </div>
-            </div>
-        </div>
+    
+    <!-- Buttons -->
+    <div class="flex justify-center space-x-4">
+      <button id="pumpOn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Pumpe Ein</button>
+      <button id="pumpOff" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Pumpe Aus</button>
     </div>
-    <script>
-        // ThingSpeak configuration
-        const CHANNEL_ID = '2999714';
-        const READ_API_KEY = '95YOHGB903ET32DX';
-        const WRITE_API_KEY = 'OZ1QPHK0W2IRD8WA';
-        const BASE_URL = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}`;
-        let pumpState = false; // Default: aus
-        let pumpStartTime = 0; // Startzeit der Pumpe (Unix-Timestamp)
+  </div>
 
-        // Toggle dropdown on touch or click for mobile devices
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            const dropbtn = dropdown.querySelector('.dropbtn');
-            dropbtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const isTouched = dropdown.classList.contains('touched');
-                document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('touched'));
-                if (!isTouched) {
-                    dropdown.classList.add('touched');
-                }
-            });
-            document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target)) {
-                    dropdown.classList.remove('touched');
-                }
-            });
-        });
+  <script>
+    const apiKey = '95YOHGB903ET32DX';
+    const writeApiKey = 'OZ1QPHK0W2IRD8WA';
+    const channelID = '2999714';
+    let pumpStartTime = null;
 
-        async function togglePump() {
-            pumpState = !pumpState;
-            const button = document.getElementById('pumpButton');
-            const indicator = button.querySelector('.indicator');
-            indicator.classList.toggle('on', pumpState);
-            indicator.classList.toggle('off', !pumpState);
-            button.textContent = `Pumpe ${pumpState ? 'Aus' : 'Ein'} `;
-            button.appendChild(indicator);
+    // Daten von ThingSpeak abrufen
+    function fetchData() {
+      fetch(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=1`)
+        .then(response => response.json())
+        .then(data => {
+          const feed = data.feeds[0];
+          document.getElementById('temperature').textContent = feed.field1 ? parseFloat(feed.field1).toFixed(1) + ' °C' : '-- °C';
+          document.getElementById('humidity').textContent = feed.field2 ? parseFloat(feed.field2).toFixed(1) + ' %' : '-- %';
+          
+          const pumpStatus = feed.field3 === '1';
+          const statusIndicator = document.getElementById('statusIndicator');
+          const statusText = document.getElementById('statusText');
+          
+          if (pumpStatus) {
+            statusIndicator.classList.remove('bg-red-500');
+            statusIndicator.classList.add('bg-green-500', 'animate-pulse');
+            statusText.textContent = 'Pumpe AN';
+            if (!pumpStartTime) pumpStartTime = new Date();
+          } else {
+            statusIndicator.classList.remove('bg-green-500', 'animate-pulse');
+            statusIndicator.classList.add('bg-red-500');
+            statusText.textContent = 'Pumpe AUS';
+            pumpStartTime = null;
+          }
 
-            // Send to ThingSpeak
-            const url = `https://api.thingspeak.com/update?api_key=${WRITE_API_KEY}&field3=${pumpState ? 1 : 0}`;
-            try {
-                const response = await fetch(url);
-                const result = await response.json();
-                if (result !== 0) {
-                    console.log('Pumpenstatus gesendet!');
-                    if (pumpState) {
-                        pumpStartTime = Math.floor(Date.now() / 1000); // Startzeit speichern
-                    }
-                } else {
-                    console.error('Fehler beim Senden des Pumpenstatus');
-                }
-            } catch (error) {
-                console.error('Fehler beim Senden an ThingSpeak:', error);
-            }
-        }
+          // Laufzeit und Wassermenge berechnen
+          if (pumpStartTime) {
+            const runtimeMinutes = ((new Date() - pumpStartTime) / 1000 / 60).toFixed(1);
+            const waterAmount = (runtimeMinutes * 0.5).toFixed(1); // Annahme: 0.5 Liter/Minute
+            document.getElementById('pumpRuntime').textContent = `${runtimeMinutes} Minuten`;
+            document.getElementById('waterAmount').textContent = `${waterAmount} Liter`;
+          } else {
+            document.getElementById('pumpRuntime').textContent = '0 Minuten';
+            document.getElementById('waterAmount').textContent = '0 Liter';
+          }
+        })
+        .catch(error => console.error('Fehler beim Abrufen der Daten:', error));
+    }
 
-        async function fetchPumpData() {
-            try {
-                const response = await fetch(`${BASE_URL}&results=10`);
-                const data = await response.json();
-                const feeds = data.feeds;
+    // Pumpenstatus an ThingSpeak senden
+    function sendPumpStatus(status) {
+      fetch(`https://api.thingspeak.com/update?api_key=${writeApiKey}&field3=${status}`)
+        .then(response => {
+          if (response.ok) {
+            console.log('Pumpenstatus gesendet!');
+          } else {
+            console.error('Fehler beim Senden an ThingSpeak:', response.status);
+          }
+        })
+        .catch(error => console.error('Fehler beim Senden:', error));
+    }
 
-                // Find latest pump state
-                let latestState = 0;
-                let latestStateTime = 0;
-                for (const feed of feeds) {
-                    if (feed.field3 && parseInt(feed.field3) !== 0) {
-                        latestState = parseInt(feed.field3);
-                        latestStateTime = new Date(feed.created_at).getTime() / 1000;
-                        break;
-                    }
-                }
+    // Button-Event-Listener
+    document.getElementById('pumpOn').addEventListener('click', () => sendPumpStatus(1));
+    document.getElementById('pumpOff').addEventListener('click', () => sendPumpStatus(0));
 
-                // Update button and indicator
-                pumpState = latestState === 1;
-                const button = document.getElementById('pumpButton');
-                const indicator = button.querySelector('.indicator');
-                indicator.classList.toggle('on', pumpState);
-                indicator.classList.toggle('off', !pumpState);
-                button.textContent = `Pumpe ${pumpState ? 'Aus' : 'Ein'} `;
-                button.appendChild(indicator);
-
-                // Calculate pump duration and amount
-                if (pumpState) {
-                    const currentTime = Math.floor(Date.now() / 1000);
-                    const durationSeconds = currentTime - latestStateTime;
-                    const durationMinutes = Math.floor(durationSeconds / 60);
-                    const durationSecondsRemainder = durationSeconds % 60;
-                    const amountLiters = (durationSeconds / 3600 * 100).toFixed(2); // 100 L/h
-                    document.getElementById('pumpDuration').textContent = `Laufzeit: ${durationMinutes} min ${durationSecondsRemainder} s`;
-                    document.getElementById('pumpAmount').textContent = `Geförderte Menge: ${amountLiters} L`;
-                } else {
-                    document.getElementById('pumpDuration').textContent = 'Laufzeit: 0 min 0 s';
-                    document.getElementById('pumpAmount').textContent = 'Geförderte Menge: 0 L';
-                }
-            } catch (error) {
-                console.error('Error fetching ThingSpeak data:', error);
-                document.getElementById('pumpDuration').textContent = 'Laufzeit: -- min -- s';
-                document.getElementById('pumpAmount').textContent = 'Geförderte Menge: -- L';
-            }
-        }
-
-        // Initial data load
-        fetchPumpData();
-        setInterval(fetchPumpData, 15000); // Update every 15 seconds
-    </script>
+    // Daten alle 15 Sekunden abrufen
+    fetchData();
+    setInterval(fetchData, 15000);
+  </script>
 </body>
 </html>
